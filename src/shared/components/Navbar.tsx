@@ -176,7 +176,7 @@ const Navbar: React.FC = () => {
 
       {/* Mobile Menu Panel */}
       <div
-        className={`fixed top-0 right-0 bottom-0 w-full sm:w-96 bg-black/98 backdrop-blur-2xl border-l-2 border-white/20 z-[195] lg:hidden transition-all duration-700 ease-out overflow-y-auto ${isOpen
+        className={`fixed top-0 right-0 bottom-0 w-full bg-black/98 backdrop-blur-2xl border-l-2 border-white/20 z-[195] lg:hidden transition-all duration-700 ease-out overflow-y-auto ${isOpen
             ? 'translate-x-0 shadow-[-20px_0_60px_rgba(255,255,255,0.1)]'
             : 'translate-x-full'
           }`}
@@ -194,9 +194,9 @@ const Navbar: React.FC = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`block relative px-8 py-5 text-sm font-black uppercase tracking-[0.3em] transition-all duration-300 overflow-visible group text-center border border-white/0 hover:border-white/20 rounded-sm focus:outline-none active:opacity-100 [-webkit-tap-highlight-color:transparent] ${isActive(item.path)
+              className={`block relative px-8 py-5 text-sm font-black uppercase tracking-[0.3em] transition-all duration-300 overflow-visible text-center border border-white/0 rounded-sm focus:outline-none active:opacity-100 [-webkit-tap-highlight-color:transparent] ${isActive(item.path)
                   ? 'text-white'
-                  : 'text-white/60 hover:text-white'
+                  : 'text-white/60'
                 }`}
             >
               {/* Petit demi-carré en haut à droite pour le lien actif */}
@@ -204,15 +204,15 @@ const Navbar: React.FC = () => {
                 <span className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-white"></span>
               )}
               
-              {/* Ligne de progression au hover */}
-              <span className={`absolute bottom-0 left-0 right-0 h-[2px] bg-white transition-all duration-300 ${isActive(item.path) ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></span>
+              {/* Ligne de progression */}
+              <span className={`absolute bottom-0 left-0 right-0 h-[2px] bg-white transition-all duration-300 ${isActive(item.path) ? 'scale-x-100' : 'scale-x-0'}`}></span>
               
               <span className="flex items-center justify-center gap-3">
                 {/* Indicateur numérique */}
                 <span className="text-[10px] text-white/30 font-mono">0{index + 1}</span>
                 {item.label}
                 <svg
-                  className={`h-4 w-4 transition-all duration-300 ${isActive(item.path) ? 'translate-x-0 opacity-100' : 'opacity-0 -translate-x-2 group-hover:translate-x-0 group-hover:opacity-100'
+                  className={`h-4 w-4 transition-all duration-300 ${isActive(item.path) ? 'translate-x-0 opacity-100' : 'opacity-0 -translate-x-2'
                     }`}
                   fill="none"
                   viewBox="0 0 24 24"
@@ -223,7 +223,6 @@ const Navbar: React.FC = () => {
               </span>
             </Link>
           ))}
-
           {/* Footer Info */}
           <div
             className="mt-16 pt-8 border-t border-white/20 text-center space-y-4"

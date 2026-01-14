@@ -215,14 +215,14 @@ const Home: React.FC = () => {
     const loadStats = async () => {
       try {
         const sessions = await db.getSessions('approved');
-        
+
         // Compter les sessions actives
         const activeSessions = sessions.length;
-        
+
         // Compter les clubs uniques
         const uniqueClubs = new Set(sessions.map(s => s.club));
         const clubsCount = uniqueClubs.size;
-        
+
         setStats([
           { label: 'Sessions Actives', val: activeSessions.toString(), type: 'number' },
           { label: 'Clubs Partenaires', val: clubsCount.toString(), type: 'number' },

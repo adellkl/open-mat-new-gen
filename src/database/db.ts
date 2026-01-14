@@ -84,6 +84,65 @@ export const db = {
     return sql('UPDATE open_mats SET status = \'approved\' WHERE id = $1', [id]);
   },
 
+  // Retirer l'approbation d'une session (Admin)
+  unapproveSession: async (id: string) => {
+    return sql('UPDATE open_mats SET status = \'pending\' WHERE id = $1', [id]);
+  },
+
+  // Mettre à jour une session (Admin)
+  updateSession: async (id: string, session: Partial<Omit<OpenMatSession, 'id' | 'status' | 'coordinates'>>) => {
+    const fields: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    if (session.title !== undefined) {
+      fields.push(`title = $${paramIndex++}`);
+      values.push(session.title);
+    }
+    if (session.club !== undefined) {
+      fields.push(`club = $${paramIndex++}`);
+      values.push(session.club);
+    }
+    if (session.city !== undefined) {
+      fields.push(`city = $${paramIndex++}`);
+      values.push(session.city);
+    }
+    if (session.address !== undefined) {
+      fields.push(`address = $${paramIndex++}`);
+      values.push(session.address);
+    }
+    if (session.date !== undefined) {
+      fields.push(`date = $${paramIndex++}`);
+      values.push(session.date);
+    }
+    if (session.time !== undefined) {
+      fields.push(`time_range = $${paramIndex++}`);
+      values.push(session.time);
+    }
+    if (session.price !== undefined) {
+      fields.push(`price = $${paramIndex++}`);
+      values.push(session.price);
+    }
+    if (session.type !== undefined) {
+      fields.push(`discipline = $${paramIndex++}`);
+      values.push(session.type);
+    }
+    if (session.description !== undefined) {
+      fields.push(`description = $${paramIndex++}`);
+      values.push(session.description);
+    }
+    if (session.photo !== undefined) {
+      fields.push(`photo = $${paramIndex++}`);
+      values.push(session.photo);
+    }
+
+    if (fields.length === 0) return;
+
+    values.push(id);
+    const query = `UPDATE open_mats SET ${fields.join(', ')} WHERE id = $${paramIndex}`;
+    return sql(query, values);
+  },
+
   // Supprimer une session (Admin)
   deleteSession: async (id: string) => {
     return sql('DELETE FROM open_mats WHERE id = $1', [id]);

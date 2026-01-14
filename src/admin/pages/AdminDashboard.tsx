@@ -6,7 +6,7 @@ import {
   Users, Layers, Settings, LogOut, 
   AlertCircle, ShieldCheck, Filter, 
   ChevronRight, ArrowUpRight, Loader2, Plus, Activity, Terminal as TerminalIcon, Hash, Cpu,
-  Upload, X, Image as ImageIcon, Key, Download, RefreshCw
+  Upload, X, Image as ImageIcon, Key, Download, RefreshCw, Edit
 } from 'lucide-react';
 import { OpenMatSession } from '../../types';
 import { db } from '../../database/db';
@@ -41,6 +41,18 @@ const AdminDashboard: React.FC = () => {
   const [adminError, setAdminError] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   
+  // Gestion de l'édition de session
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingSession, setEditingSession] = useState<OpenMatSession | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    title: '', club: '', city: '', address: '', date: '', 
+    timeStart: '', timeEnd: '', type: 'JJB', price: '', description: ''
+  });
+  const [editPhoto, setEditPhoto] = useState<File | null>(null);
+  const [editPhotoPreview, setEditPhotoPreview] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  
   const isAuthenticated = auth.isAuthenticated();
   const currentUser = auth.getCurrentUser();
 
@@ -70,6 +82,143 @@ const AdminDashboard: React.FC = () => {
       setDetailsSession(session);
       setModalAction('approve');
       setShowDetailsModal(true);
+    }
+  };
+
+  const handleUnapprove = async (id: string) => {
+    const session = sessions.find(s => s.id === id);
+    if (session) {
+      try {
+        await db.unapproveSession(id);
+        setSessions(prev => prev.map(s => s.id === id ? { ...s, status: 'pending' as const } : s));
+      } catch (error) {
+        alert("Erreur lors du retrait de la diffusion");
+      }
+    }
+  };
+
+  const handleEdit = (session: OpenMatSession) => {
+    setEditingSession(session);
+    
+    // Parser le time range
+    const [timeStart, timeEnd] = session.time.split(' - ');
+    
+    setEditFormData({
+      title: session.title,
+      club: session.club,
+      city: session.city,
+      address: session.address,
+      date: session.date,
+      timeStart: timeStart || '',
+      timeEnd: timeEnd || '',
+      type: session.type,
+      price: session.price || '',
+      description: session.description
+    });
+    
+    setEditPhotoPreview(session.photo || null);
+    setEditPhoto(null);
+    setEditError(null);
+    setShowEditModal(true);
+  };
+
+  const handleEditPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setEditError('Veuillez sélectionner un fichier image valide.');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setEditError('L\'image ne doit pas dépasser 5MB.');
+        return;
+      }
+      setEditPhoto(file);
+      setEditError(null);
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveEditPhoto = () => {
+    setEditPhoto(null);
+    setEditPhotoPreview(editingSession?.photo || null);
+  };
+
+  const handleUpdateSession = async () => {
+    if (!editingSession) return;
+
+    // Validation
+    if (!editFormData.title || !editFormData.club || !editFormData.city || 
+        !editFormData.address || !editFormData.date || 
+        !editFormData.timeStart || !editFormData.timeEnd || !editFormData.description) {
+      setEditError('Tous les champs obligatoires doivent être remplis');
+      return;
+    }
+
+    setIsUpdating(true);
+    setEditError(null);
+
+    try {
+      let photoBase64 = editingSession.photo;
+      
+      // Si une nouvelle photo a été sélectionnée
+      if (editPhoto) {
+        photoBase64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(editPhoto);
+        });
+      }
+
+      // Mettre à jour la session
+      await db.updateSession(editingSession.id, {
+        title: editFormData.title.trim(),
+        club: editFormData.club.trim(),
+        city: editFormData.city.trim(),
+        address: editFormData.address.trim(),
+        date: editFormData.date,
+        time: `${editFormData.timeStart} - ${editFormData.timeEnd}`,
+        price: editFormData.price.trim(),
+        type: editFormData.type as any,
+        description: editFormData.description.trim(),
+        photo: photoBase64 || undefined
+      });
+
+      // Mettre à jour l'état local
+      setSessions(prev => prev.map(s => 
+        s.id === editingSession.id 
+          ? {
+              ...s,
+              title: editFormData.title.trim(),
+              club: editFormData.club.trim(),
+              city: editFormData.city.trim(),
+              address: editFormData.address.trim(),
+              date: editFormData.date,
+              time: `${editFormData.timeStart} - ${editFormData.timeEnd}`,
+              price: editFormData.price.trim(),
+              type: editFormData.type as any,
+              description: editFormData.description.trim(),
+              photo: photoBase64 || s.photo
+            }
+          : s
+      ));
+
+      // Fermer le modal
+      setShowEditModal(false);
+      setEditingSession(null);
+      setEditPhoto(null);
+      setEditPhotoPreview(null);
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour:", error);
+      setEditError("Erreur lors de la mise à jour de la session");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -644,7 +793,7 @@ const AdminDashboard: React.FC = () => {
                       </td>
                       <td className="px-10 py-8 text-right">
                         <div className="flex justify-end gap-3">
-                          {s.status === 'pending' && (
+                          {s.status === 'pending' ? (
                             <button 
                               onClick={() => handleApprove(s.id)}
                               className="h-10 w-10 bg-white text-black border border-white/20 flex items-center justify-center hover:bg-zinc-200 transition-all"
@@ -652,7 +801,22 @@ const AdminDashboard: React.FC = () => {
                             >
                               <Check className="h-4 w-4" />
                             </button>
+                          ) : (
+                            <button 
+                              onClick={() => handleUnapprove(s.id)}
+                              className="h-10 w-10 border border-white/20 text-white/60 flex items-center justify-center hover:bg-white/5 hover:text-white transition-all"
+                              title="Retirer la diffusion"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
                           )}
+                          <button 
+                            onClick={() => handleEdit(s)}
+                            className="h-10 w-10 border border-white/10 text-white/40 flex items-center justify-center hover:bg-white/5 hover:text-white transition-all"
+                            title="Modifier les informations"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
                           <button 
                             onClick={() => handleReject(s.id)}
                             className="h-10 w-10 border border-white/10 text-white/40 flex items-center justify-center hover:bg-white/5 hover:text-white transition-all"
@@ -772,12 +936,39 @@ const AdminDashboard: React.FC = () => {
                           </span>
                         </td>
                         <td className="px-10 py-6 text-right">
-                          <button 
-                            onClick={() => handleReject(s.id)}
-                            className="h-10 w-10 border border-white/10 text-white/40 flex items-center justify-center hover:bg-white/5 hover:text-white transition-all"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                          <div className="flex justify-end gap-3">
+                            {s.status === 'pending' ? (
+                              <button 
+                                onClick={() => handleApprove(s.id)}
+                                className="h-10 w-10 bg-white text-black border border-white/20 flex items-center justify-center hover:bg-zinc-200 transition-all"
+                                title="Approuver et diffuser"
+                              >
+                                <Check className="h-4 w-4" />
+                              </button>
+                            ) : (
+                              <button 
+                                onClick={() => handleUnapprove(s.id)}
+                                className="h-10 w-10 border border-white/20 text-white/60 flex items-center justify-center hover:bg-white/5 hover:text-white transition-all"
+                                title="Retirer la diffusion"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            )}
+                            <button 
+                              onClick={() => handleEdit(s)}
+                              className="h-10 w-10 border border-white/10 text-white/40 flex items-center justify-center hover:bg-white/5 hover:text-white transition-all"
+                              title="Modifier les informations"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                            <button 
+                              onClick={() => handleReject(s.id)}
+                              className="h-10 w-10 border border-white/10 text-white/40 flex items-center justify-center hover:bg-white/5 hover:text-white transition-all"
+                              title="Supprimer définitivement"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -1434,6 +1625,257 @@ const AdminDashboard: React.FC = () => {
                 className="flex-1 px-8 py-4 bg-white text-black text-[10px] font-black uppercase tracking-[0.3em] hover:bg-zinc-200 transition-all"
               >
                 Confirmer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modale d'édition de session */}
+      {showEditModal && editingSession && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/90 backdrop-blur-sm overflow-y-auto">
+          <div className="max-w-4xl w-full bg-black border border-white/20 p-8 md:p-12 my-8">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-black text-white uppercase tracking-tighter">
+                Modifier la Session
+              </h2>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingSession(null);
+                  setEditPhoto(null);
+                  setEditPhotoPreview(null);
+                  setEditError(null);
+                }}
+                className="p-2 hover:bg-white/5 transition-all"
+              >
+                <X className="h-5 w-5 text-white/60" />
+              </button>
+            </div>
+
+            {editError && (
+              <div className="mb-6 p-4 border border-red-900/50 bg-red-950/10 flex items-center gap-3">
+                <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />
+                <p className="text-[10px] font-bold text-white uppercase tracking-wider">{editError}</p>
+              </div>
+            )}
+
+            <div className="space-y-6 mb-8">
+              {/* Titre et Club */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                    Nom de la Session *
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.title}
+                    onChange={(e) => setEditFormData({...editFormData, title: e.target.value})}
+                    className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10"
+                    placeholder="EX: OPEN MAT NO-GI PRO"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                    Académie Hôte *
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.club}
+                    onChange={(e) => setEditFormData({...editFormData, club: e.target.value})}
+                    className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10"
+                    placeholder="EX: GRACIE BARRA PARIS"
+                  />
+                </div>
+              </div>
+
+              {/* Ville et Date */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                    Localisation (Ville) *
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.city}
+                    onChange={(e) => setEditFormData({...editFormData, city: e.target.value})}
+                    className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10"
+                    placeholder="PARIS"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                    Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={editFormData.date}
+                    onChange={(e) => setEditFormData({...editFormData, date: e.target.value})}
+                    className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Horaires et Type */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                    Heure de début *
+                  </label>
+                  <input
+                    type="time"
+                    value={editFormData.timeStart}
+                    onChange={(e) => setEditFormData({...editFormData, timeStart: e.target.value})}
+                    className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                    Heure de fin *
+                  </label>
+                  <input
+                    type="time"
+                    value={editFormData.timeEnd}
+                    onChange={(e) => setEditFormData({...editFormData, timeEnd: e.target.value})}
+                    className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                    Spécialité *
+                  </label>
+                  <select
+                    value={editFormData.type}
+                    onChange={(e) => setEditFormData({...editFormData, type: e.target.value as any})}
+                    className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 transition-all cursor-pointer appearance-none"
+                  >
+                    <option value="JJB">JJB (GI)</option>
+                    <option value="Luta Livre">LUTA LIVRE (NO-GI)</option>
+                    <option value="Mixte">MIXTE / GRAPPLING</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Adresse et Prix */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                    Adresse Physique *
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.address}
+                    onChange={(e) => setEditFormData({...editFormData, address: e.target.value})}
+                    className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10"
+                    placeholder="RUE, CODE POSTAL..."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                    Contribution / Tarif
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.price}
+                    onChange={(e) => setEditFormData({...editFormData, price: e.target.value})}
+                    className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10"
+                    placeholder="EX: 10€ (Optionnel)"
+                  />
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="space-y-2">
+                <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                  Détails Techniques *
+                </label>
+                <textarea
+                  value={editFormData.description}
+                  onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
+                  className="w-full bg-white/[0.07] border border-white/20 p-6 min-h-[150px] text-white text-xs font-medium leading-relaxed outline-none focus:border-white/60 transition-all placeholder:text-white/10"
+                  placeholder="NIVEAU REQUIS, ÉQUIPEMENT, RÈGLES D'HYGIÈNE..."
+                />
+              </div>
+
+              {/* Photo */}
+              <div className="space-y-2">
+                <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                  Photo (Optionnel)
+                </label>
+                {!editPhotoPreview ? (
+                  <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-white/20 bg-white/[0.02] hover:border-white/40 transition-all cursor-pointer group">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Upload className="h-8 w-8 text-white/40 group-hover:text-white/60 mb-3 transition-colors" />
+                      <p className="mb-2 text-[10px] font-bold text-white/50 uppercase tracking-wider">
+                        Cliquez pour télécharger
+                      </p>
+                      <p className="text-[8px] text-white/30 uppercase tracking-wider">
+                        PNG, JPG, WEBP (MAX. 5MB)
+                      </p>
+                    </div>
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      accept="image/*"
+                      onChange={handleEditPhotoChange}
+                    />
+                  </label>
+                ) : (
+                  <div className="relative w-full">
+                    <div className="relative w-full h-64 border border-white/20 bg-white/[0.02] overflow-hidden group">
+                      <img 
+                        src={editPhotoPreview} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveEditPhoto}
+                        className="absolute top-2 right-2 p-2 bg-black/80 border border-white/20 text-white hover:bg-black transition-all opacity-0 group-hover:opacity-100"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingSession(null);
+                  setEditPhoto(null);
+                  setEditPhotoPreview(null);
+                  setEditError(null);
+                }}
+                disabled={isUpdating}
+                className="flex-1 px-8 py-4 border border-white/20 text-white text-[10px] font-black uppercase tracking-[0.3em] hover:bg-white/5 transition-all disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleUpdateSession}
+                disabled={isUpdating}
+                className="flex-1 px-8 py-4 bg-white text-black text-[10px] font-black uppercase tracking-[0.3em] hover:bg-zinc-200 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+              >
+                {isUpdating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Mise à jour...
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-4 w-4" />
+                    Enregistrer
+                  </>
+                )}
               </button>
             </div>
           </div>

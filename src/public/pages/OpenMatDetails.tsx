@@ -95,10 +95,10 @@ const OpenMatDetails: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-black pt-0">
       {/* Hero Section avec Image */}
-      <div className="relative h-[60vh] md:h-[70vh] overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black z-10"></div>
+      <div className="relative h-[70vh] md:h-[80vh] overflow-hidden z-0 -mt-24 lg:-mt-32 pt-24 lg:pt-32">
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black z-10"></div>
         {session.photo ? (
           <img 
             src={session.photo}
@@ -121,37 +121,37 @@ const OpenMatDetails: React.FC = () => {
         {/* Bouton Retour */}
         <Link 
           to="/explorer"
-          className="absolute top-8 left-8 z-20 flex items-center gap-3 px-6 py-4 bg-black/80 border border-white/20 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-black transition-all"
+          className="absolute top-32 lg:top-40 left-4 sm:left-8 z-[50] flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-black/80 border border-white/20 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-black transition-all"
         >
           <ArrowLeft className="h-4 w-4" /> Retour
         </Link>
 
         {/* Badge Discipline */}
-        <div className="absolute top-8 right-8 z-20">
-          <span className="inline-block px-6 py-3 bg-black/80 border border-white/20 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-[0.3em]">
+        <div className="absolute top-32 lg:top-40 right-4 sm:right-8 z-[50]">
+          <span className="inline-block px-4 sm:px-6 py-2 sm:py-3 bg-black/80 border border-white/20 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-[0.3em]">
             {session.type}
           </span>
         </div>
 
         {/* Titre et Info basiques */}
-        <div className="absolute bottom-0 left-0 right-0 z-20 p-8 md:p-16">
+        <div className="absolute bottom-0 left-0 right-0 z-[50] p-4 sm:p-8 md:p-12 lg:p-16">
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center gap-4 mb-6">
-              <span className="text-[10px] font-bold tracking-[0.3em] text-white/60 uppercase">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+              <span className="text-[9px] sm:text-[10px] font-bold tracking-[0.3em] text-white/60 uppercase">
                 {session.club}
               </span>
-              <div className="h-[1px] w-12 bg-white/30"></div>
-              <span className="text-[10px] font-bold tracking-[0.3em] text-white/60 uppercase flex items-center gap-2">
+              <div className="h-[1px] w-8 sm:w-12 bg-white/30"></div>
+              <span className="text-[9px] sm:text-[10px] font-bold tracking-[0.3em] text-white/60 uppercase flex items-center gap-2">
                 <MapPin className="h-3 w-3" /> {session.city}
               </span>
             </div>
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white uppercase tracking-tighter mb-6">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-white uppercase tracking-tighter mb-4 sm:mb-6">
               {session.title}
             </h1>
-            <div className="flex flex-wrap gap-6">
+            <div className="flex flex-wrap gap-4 sm:gap-6">
               <div className="flex items-center gap-2 text-white/80">
-                <Calendar className="h-4 w-4" />
-                <span className="text-sm font-bold uppercase">
+                <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm font-bold uppercase">
                   {new Date(session.date).toLocaleDateString('fr-FR', { 
                     weekday: 'long', 
                     year: 'numeric', 
@@ -161,8 +161,8 @@ const OpenMatDetails: React.FC = () => {
                 </span>
               </div>
               <div className="flex items-center gap-2 text-white/80">
-                <Clock className="h-4 w-4" />
-                <span className="text-sm font-bold uppercase">{session.time}</span>
+                <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm font-bold uppercase">{session.time}</span>
               </div>
             </div>
           </div>

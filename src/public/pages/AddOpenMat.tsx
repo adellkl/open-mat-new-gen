@@ -477,7 +477,7 @@ const AddOpenMat: React.FC = () => {
             Validation du noeud sous 24h.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
-            <Link to="/" className="flex-1 bg-white text-black py-6 text-[10px] font-black uppercase tracking-[0.3em] hover:bg-zinc-200 transition-all">
+            <Link to="/" className="flex-1 bg-white text-black py-5 sm:py-6 text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] hover:bg-zinc-200 transition-all text-center">
               Terminer
             </Link>
             <button 
@@ -495,7 +495,7 @@ const AddOpenMat: React.FC = () => {
                 setCurrentStep(1);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }} 
-              className="flex-1 border border-white/10 text-white py-6 text-[10px] font-black uppercase tracking-[0.3em] hover:bg-white/5 transition-all"
+              className="flex-1 border border-white/10 text-white py-5 sm:py-6 text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] hover:bg-white/5 transition-all"
             >
               Nouvelle Saisie
             </button>
@@ -849,12 +849,12 @@ const AddOpenMat: React.FC = () => {
           )}
 
           {/* Boutons de navigation */}
-          <div className="flex justify-between items-center mt-12 pt-8 border-t border-white/10">
+          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-0 mt-12 pt-8 border-t border-white/10">
             <button
               type="button"
               onClick={handlePrevious}
               disabled={currentStep === 1}
-              className={`px-8 py-4 text-[10px] font-black uppercase tracking-[0.3em] border transition-all ${
+              className={`px-4 sm:px-8 py-4 text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] border transition-all ${
                 currentStep === 1
                   ? 'border-white/10 text-white/20 cursor-not-allowed'
                   : 'border-white/20 text-white hover:bg-white/5'
@@ -867,7 +867,7 @@ const AddOpenMat: React.FC = () => {
               <button
                 type="button"
                 onClick={handleNext}
-                className="px-8 py-4 bg-white text-black text-[10px] font-black uppercase tracking-[0.3em] hover:bg-zinc-200 transition-all flex items-center gap-3"
+                className="px-4 sm:px-8 py-4 bg-white text-black text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] hover:bg-zinc-200 transition-all flex items-center justify-center gap-2 sm:gap-3"
               >
                 SUIVANT <ArrowRight className="h-4 w-4" />
               </button>
@@ -875,7 +875,7 @@ const AddOpenMat: React.FC = () => {
             <button 
               type="submit" 
               disabled={isSubmitting} 
-                className="px-8 py-4 bg-white text-black text-[10px] font-black uppercase tracking-[0.3em] hover:bg-zinc-200 transition-all flex items-center gap-3 disabled:opacity-50"
+                className="px-4 sm:px-8 py-4 bg-white text-black text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] hover:bg-zinc-200 transition-all flex items-center justify-center gap-2 sm:gap-3 disabled:opacity-50"
             >
               {isSubmitting ? (
                   <>INITIALISATION... <Loader2 className="animate-spin h-4 w-4" /></>
