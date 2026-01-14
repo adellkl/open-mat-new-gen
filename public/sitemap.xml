@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+  
+  <!-- Page d'accueil -->
+  <url>
+    <loc>https://www.openmatfrance.fr/</loc>
+    <lastmod>2026-01-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://www.openmatfrance.fr/" />
+  </url>
+  
+  <!-- Explorer les sessions - Page principale -->
+  <url>
+    <loc>https://www.openmatfrance.fr/explorer</loc>
+    <lastmod>2026-01-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://www.openmatfrance.fr/explorer" />
+  </url>
+  
+  <!-- Publier une session -->
+  <url>
+    <loc>https://www.openmatfrance.fr/publier</loc>
+    <lastmod>2026-01-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://www.openmatfrance.fr/publier" />
+  </url>
+  
+  <!-- À propos -->
+  <url>
+    <loc>https://www.openmatfrance.fr/a-propos</loc>
+    <lastmod>2026-01-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://www.openmatfrance.fr/a-propos" />
+  </url>
+  
+  <!-- Contact -->
+  <url>
+    <loc>https://www.openmatfrance.fr/contact</loc>
+    <lastmod>2026-01-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://www.openmatfrance.fr/contact" />
+  </url>
+  
+  <!-- Politique de confidentialité -->
+  <url>
+    <loc>https://www.openmatfrance.fr/confidentialite</loc>
+    <lastmod>2026-01-14</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://www.openmatfrance.fr/confidentialite" />
+  </url>
+  
+  <!-- 
+    Note: Les URLs des sessions individuelles (/explorer/:id) sont générées dynamiquement
+    par le serveur lors de la création/approbation de nouvelles sessions.
+    Pour un sitemap complet, exécutez le générateur de sitemap côté serveur.
+  -->
+  
+</urlset>

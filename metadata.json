@@ -1,0 +1,7 @@
+{
+  "name": "Copy of OpenMat France",
+  "description": "La plateforme de référence pour trouver et partager des sessions d'Open Mat de Jiu-Jitsu Brésilien et Luta Livre en France. Connectez-vous avec la communauté du grappling.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

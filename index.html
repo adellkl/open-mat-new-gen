@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- SEO Meta Tags -->
+    <title>OpenMat France - Plateforme de Sessions JJB & Luta Livre | Grappling</title>
+    <meta name="description" content="Découvrez et publiez des sessions d'Open Mat de Jiu-Jitsu Brésilien (JJB) et Luta Livre partout en France. Rejoignez la communauté grappling française." />
+    <meta name="keywords" content="open mat, JJB, jiu-jitsu brésilien, luta livre, grappling, jiu jitsu, bjj, no-gi, gi, combat au sol, france, open mat france, entraînement" />
+    <meta name="author" content="Adel Loukal" />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="French" />
+    <meta name="revisit-after" content="7 days" />
+    <meta name="theme-color" content="#000000" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://www.openmatfrance.fr/" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.openmatfrance.fr/" />
+    <meta property="og:title" content="OpenMat France - Sessions JJB & Luta Livre" />
+    <meta property="og:description" content="Découvrez et publiez des sessions d'Open Mat de Jiu-Jitsu Brésilien et Luta Livre partout en France. Rejoignez la communauté grappling française." />
+    <meta property="og:image" content="https://www.openmatfrance.fr/og-image.jpg" />
+    <meta property="og:site_name" content="OpenMat France" />
+    <meta property="og:locale" content="fr_FR" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://www.openmatfrance.fr/" />
+    <meta name="twitter:title" content="OpenMat France - Sessions JJB & Luta Livre" />
+    <meta name="twitter:description" content="Découvrez et publiez des sessions d'Open Mat de Jiu-Jitsu Brésilien et Luta Livre partout en France." />
+    <meta name="twitter:image" content="https://www.openmatfrance.fr/twitter-image.jpg" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    
+    <!-- Manifest PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Humans.txt -->
+    <link type="text/plain" rel="author" href="/humans.txt" />
+    
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" />
+    
+    <!-- Schema.org structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "OpenMat France",
+      "url": "https://www.openmatfrance.fr",
+      "description": "Plateforme de découverte et publication de sessions Open Mat de JJB et Luta Livre en France",
+      "inLanguage": "fr-FR",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://www.openmatfrance.fr/explorer?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "OpenMat France",
+        "url": "https://www.openmatfrance.fr"
+      }
+    }
+    </script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap');
+      
+      * {
+        font-family: 'Inter', sans-serif !important;
+        cursor: default;
+      }
+      
+      body {
+        background-color: #000000;
+        color: #ffffff;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+
+      /* Grille de fond subtile */
+      .bg-grid {
+        background-image: 
+          linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+        background-size: 60px 60px;
+        mask-image: radial-gradient(circle at 50% 50%, black, transparent 90%);
+      }
+
+      /* Lignes de tracé architecturales */
+      @keyframes drawLine {
+        from { transform: scaleX(0); opacity: 0; }
+        to { transform: scaleX(1); opacity: 1; }
+      }
+
+      .line-reveal {
+        transform-origin: left;
+        animation: drawLine 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      /* Scrollbar minimaliste */
+      ::-webkit-scrollbar { width: 4px; }
+      ::-webkit-scrollbar-track { background: #000; }
+      ::-webkit-scrollbar-thumb { background: #333; }
+      ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+      .reveal {
+        opacity: 0;
+        transform: translateY(15px);
+        transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        will-change: opacity, transform;
+      }
+      .reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      /* Pour les éléments qui doivent être actifs immédiatement */
+      .reveal.active[data-always-active="true"] {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    </style>
+    <script type="importmap">
+    {
+      "imports": {
+        "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+        "react-router-dom": "https://esm.sh/react-router-dom@^7.12.0",
+        "react/": "https://esm.sh/react@^19.2.3/",
+        "react": "https://esm.sh/react@^19.2.3",
+        "@neondatabase/serverless": "https://esm.sh/@neondatabase/serverless@0.10.4"
+      }
+    }
+    </script>
+  <link rel="stylesheet" href="/src/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+    <script>
+      // Fonction pour initialiser les animations reveal
+      function initRevealAnimations() {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+                // Ne pas observer à nouveau une fois activé
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { 
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+          }
+        );
+        
+        // Observer tous les éléments .reveal qui ne sont pas déjà actifs
+        const elements = document.querySelectorAll('.reveal:not(.active)');
+        elements.forEach(el => {
+          observer.observe(el);
+        });
+      }
+      
+      // Initialiser au chargement initial
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(initRevealAnimations, 100);
+      });
+      
+      // Réinitialiser lors des changements de route (pour React Router avec BrowserRouter)
+      let lastPath = window.location.pathname;
+      setInterval(() => {
+        if (window.location.pathname !== lastPath) {
+          lastPath = window.location.pathname;
+          setTimeout(initRevealAnimations, 200);
+        }
+      }, 100);
+    </script>
+  <script type="module" src="/src/index.tsx"></script>
+</body>
+</html>

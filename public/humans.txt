@@ -1,0 +1,28 @@
+/* TEAM */
+Développeur: Adel Loukal
+Email: adelloukal2@gmail.com
+Nom du site: OpenMat France
+Site web: https://www.openmatfrance.fr
+Description: Plateforme de découverte et publication de sessions Open Mat de JJB et Luta Livre en France
+Localisation: France
+
+/* SITE */
+Dernière mise à jour: 2026/01/14
+Langues: Français
+Doctype: HTML5
+IDE: Cursor, VS Code
+Technologies: React, TypeScript, Vite, Tailwind CSS, Neon PostgreSQL
+
+/* REMERCIEMENTS */
+Merci à la communauté grappling française pour son soutien.
+Icônes: Lucide React
+Polices: Inter (Google Fonts)
+Hébergement: À définir
+Base de données: Neon PostgreSQL Serverless
+
+/* CONTRIBUER */
+Pour contribuer ou signaler un bug:
+Email: adelloukal2@gmail.com
+Site: https://www.openmatfrance.fr/contact
+
+OpenMat France - Connecter la communauté JJB & Luta Livre 🥋
