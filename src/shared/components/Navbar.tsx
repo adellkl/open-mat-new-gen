@@ -176,76 +176,96 @@ const Navbar: React.FC = () => {
 
       {/* Mobile Menu Panel */}
       <div
-        className={`fixed top-0 right-0 bottom-0 w-full bg-black/98 backdrop-blur-2xl border-l-2 border-white/20 z-[195] lg:hidden transition-all duration-700 ease-out overflow-y-auto ${isOpen
-            ? 'translate-x-0 shadow-[-20px_0_60px_rgba(255,255,255,0.1)]'
+        className={`fixed top-0 right-0 bottom-0 w-full bg-black/98 backdrop-blur-2xl border-l border-white/10 z-[195] lg:hidden transition-all duration-700 ease-out overflow-y-auto ${isOpen
+            ? 'translate-x-0'
             : 'translate-x-full'
           }`}
       >
-        {/* Effet scanline */}
-        <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(255,255,255,0.25)_50%)] bg-[length:100%_2px]"></div>
-        
-        {/* Lignes décoratives animées */}
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-        <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-
-        <div className="p-8 pt-32 sm:pt-36 space-y-6">
-          {/* Menu Items */}
-          {navItems.map((item, index) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`block relative px-8 py-5 text-sm font-black uppercase tracking-[0.3em] transition-all duration-300 overflow-visible text-center border border-white/0 rounded-sm focus:outline-none active:opacity-100 [-webkit-tap-highlight-color:transparent] ${isActive(item.path)
-                  ? 'text-white'
-                  : 'text-white/60'
-                }`}
-            >
-              {/* Petit demi-carré en haut à droite pour le lien actif */}
-              {isActive(item.path) && (
-                <span className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-white"></span>
-              )}
-              
-              {/* Ligne de progression */}
-              <span className={`absolute bottom-0 left-0 right-0 h-[2px] bg-white transition-all duration-300 ${isActive(item.path) ? 'scale-x-100' : 'scale-x-0'}`}></span>
-              
-              <span className="flex items-center justify-center gap-3">
-                {/* Indicateur numérique */}
-                <span className="text-[10px] text-white/30 font-mono">0{index + 1}</span>
+        <div className="h-full flex flex-col justify-center p-6">
+          <div className="space-y-3">
+            {/* Menu Items */}
+            {navItems.map((item, index) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`block relative px-4 py-4 text-sm font-bold uppercase tracking-[0.2em] transition-colors duration-200 text-center focus:outline-none [-webkit-tap-highlight-color:transparent] ${isActive(item.path)
+                    ? 'text-white'
+                    : 'text-white/50'
+                  }`}
+              >
+                {/* Petit demi-carré en haut à droite pour le lien actif */}
+                {isActive(item.path) && (
+                  <span className="absolute top-0 right-0 w-2 h-2 border-t border-r border-white/60"></span>
+                )}
+                
                 {item.label}
-                <svg
-                  className={`h-4 w-4 transition-all duration-300 ${isActive(item.path) ? 'translate-x-0 opacity-100' : 'opacity-0 -translate-x-2'
-                    }`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </span>
-            </Link>
-          ))}
-          {/* Footer Info */}
-          <div
-            className="mt-16 pt-8 border-t border-white/20 text-center space-y-4"
-          >
-            {/* Logo */}
-            <div className="inline-block px-6 py-3 border border-white/10 rounded-sm">
-              <p className="text-xs font-black tracking-[0.3em] text-white/40 uppercase">
+              </Link>
+            ))}
+            
+            {/* Footer Info */}
+            <div className="mt-12 pt-6 border-t border-white/10 text-center space-y-4">
+              <p className="text-[9px] font-bold tracking-[0.2em] text-white/30 uppercase">
                 OPENMAT<span className="text-white/20">.FR</span>
               </p>
-            </div>
-            
-            {/* Description */}
-            <p className="text-[10px] text-white/40 uppercase tracking-wider font-bold">
-              L'infrastructure Grappling
-            </p>
-            
-            {/* Status indicator */}
-            <div className="flex items-center justify-center gap-2 text-[9px] text-white/30 uppercase tracking-wider mt-6">
-              <div className="w-2 h-2 rounded-full bg-green-500/50 animate-pulse"></div>
-              <span>Système Opérationnel</span>
+              
+              {/* Boutons CTA */}
+              <div className="flex flex-col gap-2 px-4">
+                <Link
+                  to="/explorer"
+                  className="px-6 py-3 bg-white text-black text-xs font-bold uppercase tracking-[0.15em] transition-opacity duration-200 active:opacity-80"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Explorer
+                </Link>
+                <Link
+                  to="/publier"
+                  className="px-6 py-3 border border-white/20 text-white text-xs font-bold uppercase tracking-[0.15em] transition-opacity duration-200 active:opacity-80"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Publier
+                </Link>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Texte défilant en bas du menu */}
+        <div className="absolute bottom-0 left-0 right-0 overflow-hidden border-t border-white/10 py-4">
+          <div className="marquee-content">
+            <span className="outline-text">JJB • LUTA LIVRE • GRAPPLING • NO-GI • OPEN MAT • </span>
+            <span className="outline-text">JJB • LUTA LIVRE • GRAPPLING • NO-GI • OPEN MAT • </span>
+          </div>
+        </div>
+
+        <style jsx>{`
+          .marquee-content {
+            display: flex;
+            width: fit-content;
+            animation: marquee 25s linear infinite;
+            will-change: transform;
+          }
+          
+          .outline-text {
+            font-size: 2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            white-space: nowrap;
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(255, 255, 255, 0.12);
+            text-stroke: 1px rgba(255, 255, 255, 0.12);
+            font-style: italic;
+          }
+          
+          @keyframes marquee {
+            0% {
+              transform: translateX(0);
+            }
+            100% {
+              transform: translateX(-50%);
+            }
+          }
+        `}</style>
       </div>
     </>
   );
