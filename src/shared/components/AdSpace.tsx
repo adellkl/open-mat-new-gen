@@ -48,19 +48,12 @@ const AdSpace: React.FC<AdSpaceProps> = ({ size = 'medium', className = '', show
         <div className="mb-4 inline-flex items-center justify-center">
           <Zap className={`${size === 'large' ? 'w-12 h-12' : 'w-8 h-8'} text-white/30 group-hover:text-white/50 transition-colors`} />
         </div>
-        <p className={`${size === 'large' ? 'text-2xl md:text-3xl' : 'text-[11px]'} font-black text-white/40 uppercase tracking-[0.3em] mb-3 group-hover:text-white/60 transition-colors`}>
-          Votre Pub Ici
-        </p>
-        <p className={`${size === 'large' ? 'text-sm' : 'text-[8px]'} text-white/20 uppercase tracking-wider font-bold mb-4`}>
-          Espace Publicitaire Disponible
-        </p>
         {showContact && (
           <a
             href="mailto:adelloukal2@gmail.com?subject=Demande%20d'espace%20publicitaire%20OpenMat%20France"
             className={`inline-flex items-center gap-2 ${size === 'large' ? 'px-6 py-3 text-xs' : 'px-4 py-2 text-[8px]'} border border-white/20 text-white/50 font-black uppercase tracking-wider hover:bg-white/5 hover:text-white/70 hover:border-white/40 transition-all`}
           >
             <Mail className={`${size === 'large' ? 'w-4 h-4' : 'w-3 h-3'}`} />
-            Contactez-nous
           </a>
         )}
       </div>

@@ -35,9 +35,9 @@
     <meta name="twitter:image" content="https://www.openmatfrance.fr/twitter-image.jpg" />
     
     <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="alternate icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
     
     <!-- Manifest PWA -->
     <link rel="manifest" href="/manifest.json" />
@@ -48,7 +48,6 @@
     <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://cdn.tailwindcss.com" />
     
     <!-- Schema.org structured data -->
     <script type="application/ld+json">
@@ -71,8 +70,6 @@
       }
     }
     </script>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap');
       
@@ -130,62 +127,10 @@
         transform: translateY(0);
       }
     </style>
-    <script type="importmap">
-    {
-      "imports": {
-        "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-        "react-router-dom": "https://esm.sh/react-router-dom@^7.12.0",
-        "react/": "https://esm.sh/react@^19.2.3/",
-        "react": "https://esm.sh/react@^19.2.3",
-        "@neondatabase/serverless": "https://esm.sh/@neondatabase/serverless@0.10.4"
-      }
-    }
-    </script>
   <link rel="stylesheet" href="/src/index.css">
 </head>
   <body>
     <div id="root"></div>
-    <script>
-      // Fonction pour initialiser les animations reveal
-      function initRevealAnimations() {
-        const observer = new IntersectionObserver(
-          (entries) => {
-            entries.forEach(entry => {
-              if (entry.isIntersecting) {
-                entry.target.classList.add('active');
-                // Ne pas observer à nouveau une fois activé
-                observer.unobserve(entry.target);
-              }
-            });
-          },
-          { 
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-          }
-        );
-        
-        // Observer tous les éléments .reveal qui ne sont pas déjà actifs
-        const elements = document.querySelectorAll('.reveal:not(.active)');
-        elements.forEach(el => {
-          observer.observe(el);
-        });
-      }
-      
-      // Initialiser au chargement initial
-      document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(initRevealAnimations, 100);
-      });
-      
-      // Réinitialiser lors des changements de route (pour React Router avec BrowserRouter)
-      let lastPath = window.location.pathname;
-      setInterval(() => {
-        if (window.location.pathname !== lastPath) {
-          lastPath = window.location.pathname;
-          setTimeout(initRevealAnimations, 200);
-        }
-      }, 100);
-    </script>
-  <script type="module" src="/src/index.tsx"></script>
-</body>
+    <script type="module" src="/src/index.tsx"></script>
+  </body>
 </html>

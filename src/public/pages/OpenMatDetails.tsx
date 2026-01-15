@@ -14,6 +14,37 @@ const OpenMatDetails: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  const parseDates = (value?: string | null | any) => {
+    if (!value) {
+      return [];
+    }
+    // Si c'est déjà un tableau, le retourner
+    if (Array.isArray(value)) {
+      return value.map(v => String(v).trim()).filter(Boolean);
+    }
+    // Si c'est une chaîne de caractères
+    if (typeof value === 'string') {
+      return value
+        .split('|')
+        .map((date) => date.trim())
+        .filter(Boolean);
+    }
+    // Si c'est un autre type (Date, number, etc.), le convertir en chaîne
+    return [String(value).trim()].filter(Boolean);
+  };
+
+  const formatLongDate = (value: string) => {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime())
+      ? value
+      : parsed.toLocaleDateString('fr-FR', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+  };
+
   useEffect(() => {
     const loadSession = async () => {
       if (!id) {
@@ -97,7 +128,7 @@ const OpenMatDetails: React.FC = () => {
   return (
     <div className="min-h-screen bg-black pt-0">
       {/* Hero Section avec Image */}
-      <div className="relative h-[70vh] md:h-[80vh] overflow-hidden z-0 -mt-24 lg:-mt-32 pt-24 lg:pt-32">
+      <div className="relative h-[60vh] sm:h-[70vh] md:h-[80vh] overflow-hidden z-0 -mt-16 sm:-mt-24 lg:-mt-32 pt-16 sm:pt-24 lg:pt-32">
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black z-10"></div>
         {session.photo ? (
           <img 
@@ -121,13 +152,13 @@ const OpenMatDetails: React.FC = () => {
         {/* Bouton Retour */}
         <Link 
           to="/explorer"
-          className="absolute top-32 lg:top-40 left-4 sm:left-8 z-[50] flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-black/80 border border-white/20 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-black transition-all"
+          className="absolute top-24 sm:top-32 lg:top-40 left-4 sm:left-8 z-[50] flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-black/80 border border-white/20 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-black transition-all"
         >
           <ArrowLeft className="h-4 w-4" /> Retour
         </Link>
 
         {/* Badge Discipline */}
-        <div className="absolute top-32 lg:top-40 right-4 sm:right-8 z-[50]">
+        <div className="absolute top-24 sm:top-32 lg:top-40 right-4 sm:right-8 z-[50]">
           <span className="inline-block px-4 sm:px-6 py-2 sm:py-3 bg-black/80 border border-white/20 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-[0.3em]">
             {session.type}
           </span>
@@ -145,19 +176,14 @@ const OpenMatDetails: React.FC = () => {
                 <MapPin className="h-3 w-3" /> {session.city}
               </span>
             </div>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-white uppercase tracking-tighter mb-4 sm:mb-6">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-white uppercase tracking-tighter mb-4 sm:mb-6 break-words">
               {session.title}
             </h1>
             <div className="flex flex-wrap gap-4 sm:gap-6">
               <div className="flex items-center gap-2 text-white/80">
                 <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="text-xs sm:text-sm font-bold uppercase">
-                  {new Date(session.date).toLocaleDateString('fr-FR', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}
+                  {parseDates(session.date).map(formatLongDate).join(' • ')}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-white/80">
@@ -170,7 +196,7 @@ const OpenMatDetails: React.FC = () => {
       </div>
 
       {/* Contenu Principal */}
-      <div className="max-w-7xl mx-auto px-6 py-16 md:px-8 md:py-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-24">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* Colonne Principale - Description */}
           <div className="lg:col-span-2 space-y-12">
@@ -181,8 +207,8 @@ const OpenMatDetails: React.FC = () => {
                   À Propos de la Session
                 </h2>
               </div>
-              <div className="border border-white/10 bg-white/[0.02] p-8 md:p-12">
-                <p className="text-white/70 text-base leading-relaxed whitespace-pre-line">
+              <div className="border border-white/10 bg-white/[0.02] p-6 sm:p-8 md:p-12">
+                <p className="text-white/70 text-sm sm:text-base leading-relaxed whitespace-pre-line">
                   {session.description}
                 </p>
               </div>
@@ -196,7 +222,7 @@ const OpenMatDetails: React.FC = () => {
                   Localisation
                 </h2>
               </div>
-              <div className="border border-white/10 bg-white/[0.02] p-8 md:p-12">
+              <div className="border border-white/10 bg-white/[0.02] p-6 sm:p-8 md:p-12">
                 <p className="text-white/80 text-lg font-bold mb-2">{session.club}</p>
                 <p className="text-white/50 text-sm mb-6">{session.address}</p>
                 <p className="text-white/50 text-sm mb-6">{session.city}</p>
@@ -205,7 +231,7 @@ const OpenMatDetails: React.FC = () => {
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${session.address}, ${session.city}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-3 px-8 py-4 border border-white/20 text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white/5 transition-all"
+                  className="inline-flex w-full sm:w-auto items-center justify-center gap-3 px-6 sm:px-8 py-4 border border-white/20 text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white/5 transition-all"
                 >
                   <Navigation className="h-4 w-4" />
                   Ouvrir dans Maps
@@ -217,7 +243,7 @@ const OpenMatDetails: React.FC = () => {
           {/* Sidebar - Informations Rapides */}
           <div className="space-y-6">
             {/* Carte Info Rapide */}
-            <div className="border border-white/10 bg-white/[0.02] p-8 reveal active" data-always-active="true">
+            <div className="border border-white/10 bg-white/[0.02] p-6 sm:p-8 reveal active" data-always-active="true">
               <h3 className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-8">
                 Informations Pratiques
               </h3>
@@ -228,14 +254,13 @@ const OpenMatDetails: React.FC = () => {
                     <Calendar className="h-4 w-4 text-white/40" />
                     <p className="text-[9px] font-bold text-white/40 uppercase tracking-[0.2em]">Date</p>
                   </div>
-                  <p className="text-sm font-black text-white pl-7">
-                    {new Date(session.date).toLocaleDateString('fr-FR', { 
-                      weekday: 'long', 
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric'
-                    })}
-                  </p>
+                  <div className="pl-7 space-y-2">
+                    {parseDates(session.date).map((dateLabel, index) => (
+                      <p key={`session-date-${index}`} className="text-sm font-black text-white">
+                        {formatLongDate(dateLabel)}
+                      </p>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="border-t border-white/5 pt-6">
@@ -277,7 +302,7 @@ const OpenMatDetails: React.FC = () => {
             {/* Bouton Partager */}
             <button
               onClick={handleShare}
-              className="w-full flex items-center justify-center gap-3 px-8 py-5 bg-white text-black text-[10px] font-black uppercase tracking-[0.3em] hover:bg-zinc-200 transition-all"
+              className="w-full flex items-center justify-center gap-3 px-6 sm:px-8 py-5 bg-white text-black text-[10px] font-black uppercase tracking-[0.3em] hover:bg-zinc-200 transition-all"
             >
               <Share2 className="h-4 w-4" />
               Partager

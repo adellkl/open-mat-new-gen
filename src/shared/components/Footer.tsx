@@ -69,6 +69,12 @@ const Footer: React.FC = () => {
           <p className="text-[9px] font-bold text-white/20 uppercase tracking-[0.5em]">
             © 2026 OPENMAT FRANCE / INFRASTRUCTURE PROTOCOL
           </p>
+          <Link
+            to="/contact"
+            className="text-[9px] font-black text-white/40 uppercase tracking-[0.3em] hover:text-white transition-all"
+          >
+            Me contacter pour partenariat
+          </Link>
           <Link 
             to="/admin" 
             className="flex items-center gap-3 text-[9px] font-black text-white/40 uppercase tracking-[0.3em] px-8 py-3 border border-white/10 hover:border-white/40 hover:text-white transition-all"

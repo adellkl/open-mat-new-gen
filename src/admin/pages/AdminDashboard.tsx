@@ -6,7 +6,7 @@ import {
   Users, Layers, Settings, LogOut, 
   AlertCircle, ShieldCheck, Filter, 
   ChevronRight, ArrowUpRight, Loader2, Plus, Activity, Terminal as TerminalIcon, Hash, Cpu,
-  Upload, X, Image as ImageIcon, Key, Download, RefreshCw, Edit
+  Upload, X, Image as ImageIcon, Key, Download, RefreshCw, Edit, ChevronDown
 } from 'lucide-react';
 import { OpenMatSession } from '../../types';
 import { db } from '../../database/db';
@@ -45,7 +45,7 @@ const AdminDashboard: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingSession, setEditingSession] = useState<OpenMatSession | null>(null);
   const [editFormData, setEditFormData] = useState({
-    title: '', club: '', city: '', address: '', date: '', 
+    title: '', club: '', city: '', address: '', dates: [''],
     timeStart: '', timeEnd: '', type: 'JJB', price: '', description: ''
   });
   const [editPhoto, setEditPhoto] = useState<File | null>(null);
@@ -97,6 +97,25 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const parseDates = (value: string | any) => {
+    // Si c'est déjà un tableau, le retourner
+    if (Array.isArray(value)) {
+      const dates = value.map(v => String(v).trim()).filter(Boolean);
+      return dates.length > 0 ? dates : [''];
+    }
+    // Si c'est une chaîne de caractères
+    if (typeof value === 'string') {
+      const dates = value
+        .split('|')
+        .map((date) => date.trim())
+        .filter(Boolean);
+      return dates.length > 0 ? dates : [''];
+    }
+    // Si c'est un autre type (Date, number, etc.), le convertir en chaîne
+    const dateStr = String(value).trim();
+    return dateStr ? [dateStr] : [''];
+  };
+
   const handleEdit = (session: OpenMatSession) => {
     setEditingSession(session);
     
@@ -108,7 +127,7 @@ const AdminDashboard: React.FC = () => {
       club: session.club,
       city: session.city,
       address: session.address,
-      date: session.date,
+      dates: parseDates(session.date),
       timeStart: timeStart || '',
       timeEnd: timeEnd || '',
       type: session.type,
@@ -149,16 +168,40 @@ const AdminDashboard: React.FC = () => {
     setEditPhotoPreview(editingSession?.photo || null);
   };
 
+  const handleEditDateChange = (index: number, value: string) => {
+    const nextDates = [...editFormData.dates];
+    nextDates[index] = value;
+    setEditFormData({ ...editFormData, dates: nextDates });
+  };
+
+  const handleAddEditDate = () => {
+    if (!editFormData.dates[editFormData.dates.length - 1]) {
+      return;
+    }
+    setEditFormData({ ...editFormData, dates: [...editFormData.dates, ''] });
+  };
+
+  const handleRemoveEditDate = (index: number) => {
+    if (editFormData.dates.length === 1) {
+      return;
+    }
+    const nextDates = editFormData.dates.filter((_, idx) => idx !== index);
+    setEditFormData({ ...editFormData, dates: nextDates });
+  };
+
   const handleUpdateSession = async () => {
     if (!editingSession) return;
 
     // Validation
+    const hasEmptyDate = editFormData.dates.some((date) => !date);
     if (!editFormData.title || !editFormData.club || !editFormData.city || 
-        !editFormData.address || !editFormData.date || 
+        !editFormData.address || hasEmptyDate || 
         !editFormData.timeStart || !editFormData.timeEnd || !editFormData.description) {
       setEditError('Tous les champs obligatoires doivent être remplis');
       return;
     }
+
+    const normalizedDates = Array.from(new Set(editFormData.dates.filter(Boolean))).sort();
 
     setIsUpdating(true);
     setEditError(null);
@@ -182,7 +225,7 @@ const AdminDashboard: React.FC = () => {
         club: editFormData.club.trim(),
         city: editFormData.city.trim(),
         address: editFormData.address.trim(),
-        date: editFormData.date,
+        date: normalizedDates.join(' | '),
         time: `${editFormData.timeStart} - ${editFormData.timeEnd}`,
         price: editFormData.price.trim(),
         type: editFormData.type as any,
@@ -199,7 +242,7 @@ const AdminDashboard: React.FC = () => {
               club: editFormData.club.trim(),
               city: editFormData.city.trim(),
               address: editFormData.address.trim(),
-              date: editFormData.date,
+              date: normalizedDates.join(' | '),
               time: `${editFormData.timeStart} - ${editFormData.timeEnd}`,
               price: editFormData.price.trim(),
               type: editFormData.type as any,
@@ -489,6 +532,20 @@ const AdminDashboard: React.FC = () => {
     total: sessions.length,
     pending: sessions.filter(s => s.status === 'pending').length,
     approved: sessions.filter(s => s.status === 'approved').length,
+    withPhoto: sessions.filter(s => s.photo).length,
+    uniqueCities: new Set(sessions.map(s => s.city)).size,
+    uniqueClubs: new Set(sessions.map(s => s.club)).size,
+    byType: {
+      jjb: sessions.filter(s => s.type === 'JJB').length,
+      lutaLivre: sessions.filter(s => s.type === 'Luta Livre').length,
+      mixte: sessions.filter(s => s.type === 'Mixte').length,
+    },
+    approvalRate: sessions.length > 0 
+      ? Math.round((sessions.filter(s => s.status === 'approved').length / sessions.length) * 100)
+      : 0,
+    avgSessionsPerClub: new Set(sessions.map(s => s.club)).size > 0
+      ? (sessions.length / new Set(sessions.map(s => s.club)).size).toFixed(1)
+      : '0',
   };
 
   if (!isAuthenticated || !currentUser) return <Navigate to="/admin" />;
@@ -1130,27 +1187,43 @@ const AdminDashboard: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-black text-white uppercase tracking-tight">Performance</h3>
-                    <p className="text-[10px] text-white/30 uppercase tracking-wider">Monitoring</p>
+                    <p className="text-[10px] text-white/30 uppercase tracking-wider">Statistiques Système</p>
                   </div>
                 </div>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center py-2 border-b border-white/5">
-                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Temps de réponse</span>
-                    <span className="text-[10px] font-black text-white">~12ms</span>
+                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Taux d'approbation</span>
+                    <span className="text-[10px] font-black text-white">{stats.approvalRate}%</span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-white/5">
-                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Uptime</span>
-                    <span className="text-[10px] font-black text-white">99.9%</span>
+                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Villes actives</span>
+                    <span className="text-[10px] font-black text-white">{stats.uniqueCities}</span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-white/5">
-                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Requêtes/jour</span>
-                    <span className="text-[10px] font-black text-white">~2.4K</span>
+                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Clubs partenaires</span>
+                    <span className="text-[10px] font-black text-white">{stats.uniqueClubs}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-white/5">
+                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Moy. sessions/club</span>
+                    <span className="text-[10px] font-black text-white">{stats.avgSessionsPerClub}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-white/5">
+                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Avec photo</span>
+                    <span className="text-[10px] font-black text-white">
+                      {stats.withPhoto}/{stats.total} ({stats.total > 0 ? Math.round((stats.withPhoto/stats.total)*100) : 0}%)
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-white/5">
+                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Distribution</span>
+                    <span className="text-[10px] font-black text-white">
+                      {stats.byType.jjb}J / {stats.byType.lutaLivre}L / {stats.byType.mixte}M
+                    </span>
                   </div>
                   <div className="flex justify-between items-center py-2">
-                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Statut</span>
+                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Statut système</span>
                     <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-white/60 animate-pulse"></div>
-                      <span className="text-[10px] font-black text-white uppercase">En Ligne</span>
+                      <div className="h-2 w-2 rounded-full bg-green-500/80 animate-pulse"></div>
+                      <span className="text-[10px] font-black text-white uppercase">Opérationnel</span>
                     </div>
                   </div>
                 </div>
@@ -1449,15 +1522,18 @@ const AdminDashboard: React.FC = () => {
                 <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
                   Rôle
                 </label>
-                <select
-                  value={newAdmin.role}
-                  onChange={(e) => setNewAdmin({...newAdmin, role: e.target.value})}
-                  className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 transition-all cursor-pointer appearance-none"
-                >
-                  <option value="moderator">MODÉRATEUR</option>
-                  <option value="admin">SUPER ADMIN</option>
-                  <option value="viewer">LECTURE SEULE</option>
-                </select>
+                <div className="relative group">
+                  <select
+                    value={newAdmin.role}
+                    onChange={(e) => setNewAdmin({...newAdmin, role: e.target.value})}
+                    className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 pr-12 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 hover:border-white/40 hover:bg-white/[0.1] transition-all cursor-pointer appearance-none select-custom-admin"
+                  >
+                    <option value="moderator">MODÉRATEUR</option>
+                    <option value="admin">SUPER ADMIN</option>
+                    <option value="viewer">LECTURE SEULE</option>
+                  </select>
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 group-hover:text-white/60 transition-all duration-300 pointer-events-none group-hover:translate-y-[-40%]" />
+                </div>
               </div>
             </div>
 
@@ -1707,14 +1783,40 @@ const AdminDashboard: React.FC = () => {
 
                 <div className="space-y-2">
                   <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
-                    Date *
+                    Dates *
                   </label>
-                  <input
-                    type="date"
-                    value={editFormData.date}
-                    onChange={(e) => setEditFormData({...editFormData, date: e.target.value})}
-                    className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all"
-                  />
+                  <div className="space-y-3">
+                    {editFormData.dates.map((dateValue, index) => (
+                      <div key={`edit-date-${index}`} className="flex items-center gap-3">
+                        <input
+                          type="date"
+                          value={dateValue}
+                          onChange={(e) => handleEditDateChange(index, e.target.value)}
+                          className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveEditDate(index)}
+                          className={`h-12 w-12 border border-white/10 flex items-center justify-center transition-all ${
+                            editFormData.dates.length === 1
+                              ? 'text-white/20 cursor-not-allowed'
+                              : 'text-white/50 hover:text-white hover:border-white/40'
+                          }`}
+                          disabled={editFormData.dates.length === 1}
+                          aria-label="Supprimer cette date"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={handleAddEditDate}
+                      className="inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-white/50 hover:text-white transition-all"
+                    >
+                      <Plus className="h-3 w-3" /> Ajouter une date
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1748,15 +1850,18 @@ const AdminDashboard: React.FC = () => {
                   <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
                     Spécialité *
                   </label>
-                  <select
-                    value={editFormData.type}
-                    onChange={(e) => setEditFormData({...editFormData, type: e.target.value as any})}
-                    className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 transition-all cursor-pointer appearance-none"
-                  >
-                    <option value="JJB">JJB (GI)</option>
-                    <option value="Luta Livre">LUTA LIVRE (NO-GI)</option>
-                    <option value="Mixte">MIXTE / GRAPPLING</option>
-                  </select>
+                  <div className="relative group">
+                    <select
+                      value={editFormData.type}
+                      onChange={(e) => setEditFormData({...editFormData, type: e.target.value as any})}
+                      className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 pr-12 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 hover:border-white/40 hover:bg-white/[0.1] transition-all cursor-pointer appearance-none select-custom-admin"
+                    >
+                      <option value="JJB">JJB (GI)</option>
+                      <option value="Luta Livre">LUTA LIVRE (NO-GI)</option>
+                      <option value="Mixte">MIXTE / GRAPPLING</option>
+                    </select>
+                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 group-hover:text-white/60 transition-all duration-300 pointer-events-none group-hover:translate-y-[-40%]" />
+                  </div>
                 </div>
               </div>
 

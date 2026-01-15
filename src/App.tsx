@@ -34,10 +34,10 @@ const ScrollToTop: React.FC = () => {
     // Réinitialiser et activer les animations reveal
     const initRevealAnimations = () => {
       // Retirer temporairement la classe active pour réinitialiser
+      // SAUF pour les éléments avec data-always-active
       const allRevealElements = document.querySelectorAll('.reveal');
       allRevealElements.forEach((el) => {
-        // Ne retirer que si ce n'est pas un élément avec .active dans le HTML
-        if (!el.classList.contains('active') || el.getAttribute('data-always-active') !== 'true') {
+        if (el.getAttribute('data-always-active') !== 'true') {
           el.classList.remove('active');
         }
       });
@@ -66,7 +66,7 @@ const ScrollToTop: React.FC = () => {
       });
 
       // Activer immédiatement les éléments avec data-always-active
-      const alwaysActiveElements = document.querySelectorAll('.reveal.active[data-always-active="true"]');
+      const alwaysActiveElements = document.querySelectorAll('.reveal[data-always-active="true"]');
       alwaysActiveElements.forEach((el) => {
         el.classList.add('active');
       });

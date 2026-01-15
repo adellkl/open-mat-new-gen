@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Check, Loader2, AlertCircle, ArrowRight, Plus,
-  Activity, Hash, Cpu, Terminal as TerminalIcon, Circle, Upload, X, Image as ImageIcon
+  Activity, Hash, Cpu, Terminal as TerminalIcon, Circle, Upload, X, Image as ImageIcon, ChevronDown
 } from 'lucide-react';
 import { db } from '../../database/db';
 import SEO from '../../shared/components/SEO';
@@ -11,7 +11,7 @@ import { searchClubs, Club, DEFAULT_CLUB_LOGO } from '../../data/clubs';
 
 const InputField: React.FC<{ label: string } & React.InputHTMLAttributes<HTMLInputElement>> = ({ label, ...props }) => (
   <div className="space-y-2">
-    <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">{label}</label>
+    <label className="text-[11px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">{label}</label>
     <input 
       {...props}
       className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10"
@@ -165,7 +165,7 @@ const AddOpenMat: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [formData, setFormData] = useState({
-    title: '', club: '', city: '', address: '', date: '', 
+    title: '', club: '', city: '', address: '', dates: [''],
     timeStart: '', timeEnd: '', type: 'JJB', price: '', description: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -288,10 +288,11 @@ const AddOpenMat: React.FC = () => {
     {
       id: 2,
       title: 'LOGISTIQUE',
-      fields: ['city', 'date', 'timeStart', 'timeEnd', 'type'],
+      fields: ['city', 'dates', 'timeStart', 'timeEnd', 'type'],
       validate: () => {
         // Vérifier que tous les champs sont remplis
-        if (!formData.city.trim() || !formData.date || !formData.timeStart || !formData.timeEnd) {
+        const hasEmptyDate = formData.dates.some((date) => !date);
+        if (!formData.city.trim() || hasEmptyDate || !formData.timeStart || !formData.timeEnd) {
           return false;
         }
         // Comparer les heures correctement
@@ -335,8 +336,8 @@ const AddOpenMat: React.FC = () => {
       if (currentStep === 2) {
         if (!formData.city.trim()) {
           errorMessage = "Veuillez remplir la ville.";
-        } else if (!formData.date) {
-          errorMessage = "Veuillez sélectionner une date.";
+        } else if (formData.dates.some((date) => !date)) {
+          errorMessage = "Veuillez sélectionner toutes les dates.";
         } else if (!formData.timeStart) {
           errorMessage = "Veuillez sélectionner l'heure de début.";
         } else if (!formData.timeEnd) {
@@ -361,6 +362,27 @@ const AddOpenMat: React.FC = () => {
       setCurrentStep(currentStep - 1);
       setError(null);
     }
+  };
+
+  const handleDateChange = (index: number, value: string) => {
+    const nextDates = [...formData.dates];
+    nextDates[index] = value;
+    setFormData({ ...formData, dates: nextDates });
+  };
+
+  const handleAddDate = () => {
+    if (!formData.dates[formData.dates.length - 1]) {
+      return;
+    }
+    setFormData({ ...formData, dates: [...formData.dates, ''] });
+  };
+
+  const handleRemoveDate = (index: number) => {
+    if (formData.dates.length === 1) {
+      return;
+    }
+    const nextDates = formData.dates.filter((_, idx) => idx !== index);
+    setFormData({ ...formData, dates: nextDates });
   };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -401,6 +423,8 @@ const AddOpenMat: React.FC = () => {
       return;
     }
 
+    const normalizedDates = Array.from(new Set(formData.dates.filter(Boolean))).sort();
+
     setIsSubmitting(true);
     setError(null);
     
@@ -421,7 +445,7 @@ const AddOpenMat: React.FC = () => {
         club: formData.club.trim(),
         city: formData.city.trim(),
         address: formData.address.trim(),
-        date: formData.date,
+        date: normalizedDates.join(' | '),
         time: `${formData.timeStart} - ${formData.timeEnd}`,
         price: formData.price.trim(),
         type: formData.type as any,
@@ -443,7 +467,7 @@ const AddOpenMat: React.FC = () => {
       // Réinitialiser le formulaire après 25 secondes
       setTimeout(() => {
         setFormData({
-          title: '', club: '', city: '', address: '', date: '', 
+          title: '', club: '', city: '', address: '', dates: [''],
           timeStart: '', timeEnd: '', type: 'JJB', price: '', description: ''
         });
         setPhoto(null);
@@ -465,9 +489,9 @@ const AddOpenMat: React.FC = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center px-6 relative">
+      <div className="min-h-screen bg-black flex items-center justify-center px-4 sm:px-6 relative">
         {showFireworks && <Fireworks />}
-        <div className="max-w-2xl w-full border border-white/10 p-12 md:p-24 text-center reveal active relative z-50" data-always-active="true">
+        <div className="max-w-2xl w-full border border-white/10 p-8 sm:p-12 md:p-24 text-center reveal active relative z-50" data-always-active="true">
           <div className="inline-flex items-center justify-center h-20 w-20 border border-white/20 rounded-full mb-12 animate-pulse">
             <Check className="h-8 w-8 text-white" />
           </div>
@@ -485,7 +509,7 @@ const AddOpenMat: React.FC = () => {
                 setSuccess(false);
                 setShowFireworks(false);
                 setFormData({
-                  title: '', club: '', city: '', address: '', date: '', 
+                  title: '', club: '', city: '', address: '', dates: [''],
                   timeStart: '', timeEnd: '', type: 'JJB', price: '', description: ''
                 });
                 setPhoto(null);
@@ -517,7 +541,7 @@ const AddOpenMat: React.FC = () => {
       <div className="relative bg-black min-h-screen pt-8 pb-20 overflow-x-hidden">
         <div className="fixed inset-0 bg-grid z-0 pointer-events-none opacity-40"></div>
 
-        <div className="relative z-30 max-w-5xl mx-auto px-6">
+        <div className="relative z-30 max-w-5xl mx-auto px-4 sm:px-6">
           {/* Header */}
           <header className="text-center mb-8">
             <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter uppercase mb-4 italic">PUBLIER.</h1>
@@ -528,10 +552,10 @@ const AddOpenMat: React.FC = () => {
 
         {/* Indicateur de progression */}
         <div className="mb-10">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-6 sm:gap-0 mb-6">
             {steps.map((step, index) => (
               <React.Fragment key={step.id}>
-                <div className="flex flex-col items-center flex-1">
+                <div className="flex flex-col items-center flex-1 min-w-[90px]">
                   <div className="relative w-10 h-10">
                     {/* Cercle de fond */}
                     <div className={`absolute inset-0 rounded-full border-2 transition-all ${
@@ -575,7 +599,7 @@ const AddOpenMat: React.FC = () => {
                   </span>
                 </div>
                 {index < steps.length - 1 && (
-                  <div className={`flex-1 h-[1px] mx-3 transition-all ${
+                  <div className={`hidden sm:block flex-1 h-[1px] mx-3 transition-all ${
                     completedSteps.includes(step.id) ? 'bg-white' : 'bg-white/10'
                   }`} />
                 )}
@@ -592,7 +616,7 @@ const AddOpenMat: React.FC = () => {
         )}
 
         {/* Formulaire par étapes */}
-        <form onSubmit={handleSubmit} className="bg-white/[0.02] border border-white/10 p-8 md:p-12">
+        <form onSubmit={handleSubmit} className="bg-white/[0.02] border border-white/10 p-6 sm:p-8 md:p-12">
           {/* Étape 1: Identification */}
           {currentStep === 1 && (
             <div className="space-y-6 animate-fadeIn">
@@ -610,7 +634,7 @@ const AddOpenMat: React.FC = () => {
               />
               {/* Champ avec autocomplétion pour le club */}
               <div className="space-y-2 relative" ref={clubInputRef}>
-                <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                <label className="text-[11px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
                   Académie Hôte *
                 </label>
                 <input
@@ -688,7 +712,7 @@ const AddOpenMat: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 {/* Champ avec autocomplétion pour la ville */}
                 <div className="space-y-2 relative" ref={cityInputRef}>
-                  <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                <label className="text-[11px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
                     Localisation (Ville)
                   </label>
                   <input
@@ -729,13 +753,44 @@ const AddOpenMat: React.FC = () => {
                     </div>
                   )}
                 </div>
-                <InputField 
-                  label="Date de déploiement"
-                  required 
-                  type="date" 
-                  value={formData.date} 
-                  onChange={(e) => setFormData({...formData, date: e.target.value})} 
-                />
+                <div className="space-y-2">
+                  <label className="text-[11px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                    Dates de déploiement
+                  </label>
+                  <div className="space-y-3">
+                    {formData.dates.map((dateValue, index) => (
+                      <div key={`date-${index}`} className="flex items-center gap-3">
+                        <input
+                          required
+                          type="date"
+                          value={dateValue}
+                          onChange={(e) => handleDateChange(index, e.target.value)}
+                          className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveDate(index)}
+                          className={`h-12 w-12 border border-white/10 flex items-center justify-center transition-all ${
+                            formData.dates.length === 1
+                              ? 'text-white/20 cursor-not-allowed'
+                              : 'text-white/50 hover:text-white hover:border-white/40'
+                          }`}
+                          disabled={formData.dates.length === 1}
+                          aria-label="Supprimer cette date"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={handleAddDate}
+                      className="inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-white/50 hover:text-white transition-all"
+                    >
+                      <Plus className="h-3 w-3" /> Ajouter une date
+                    </button>
+                  </div>
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <InputField 
@@ -752,17 +807,20 @@ const AddOpenMat: React.FC = () => {
                 value={formData.timeEnd} 
                   onChange={(e) => setFormData({...formData, timeEnd: e.target.value})} 
               />
-                <div className="space-y-2">
-                <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">Spécialité</label>
-                  <select 
-                    className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 transition-all cursor-pointer appearance-none"
-                    value={formData.type} 
-                    onChange={(e) => setFormData({...formData, type: e.target.value as any})}
-                  >
-                    <option value="JJB">JJB (GI)</option>
-                    <option value="Luta Livre">LUTA LIVRE (NO-GI)</option>
-                    <option value="Mixte">MIXTE / GRAPPLING</option>
-                  </select>
+                <div className="space-y-2 relative group">
+                <label className="text-[11px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">Spécialité</label>
+                  <div className="relative">
+                    <select 
+                      className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 pr-12 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 hover:border-white/40 hover:bg-white/[0.1] transition-all cursor-pointer appearance-none select-custom"
+                      value={formData.type} 
+                      onChange={(e) => setFormData({...formData, type: e.target.value as any})}
+                    >
+                      <option value="JJB">JJB (GI)</option>
+                      <option value="Luta Livre">LUTA LIVRE (NO-GI)</option>
+                      <option value="Mixte">MIXTE / GRAPPLING</option>
+                    </select>
+                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 group-hover:text-white/60 transition-all duration-300 pointer-events-none group-hover:translate-y-[-40%]" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -792,7 +850,7 @@ const AddOpenMat: React.FC = () => {
               />
             </div>
               <div className="space-y-2 mb-6">
-              <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">Détails Techniques</label>
+              <label className="text-[11px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">Détails Techniques</label>
               <textarea 
                 required 
                   className="w-full bg-white/[0.07] border border-white/20 p-6 min-h-[150px] text-white text-xs font-medium leading-relaxed outline-none focus:border-white/60 transition-all placeholder:text-white/10"
@@ -804,7 +862,7 @@ const AddOpenMat: React.FC = () => {
 
               {/* Champ d'upload de photo */}
               <div className="space-y-2">
-                <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">Photo (Optionnel)</label>
+                <label className="text-[11px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">Photo (Optionnel)</label>
                 {!photoPreview ? (
                   <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-white/20 bg-white/[0.02] hover:border-white/40 transition-all cursor-pointer group">
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">

@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, MapPin, Calendar, Clock, ArrowUpRight, Map as MapIcon, List, Loader2 } from 'lucide-react';
+import { Search, MapPin, Calendar, Clock, ArrowUpRight, Map as MapIcon, List, Loader2, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { OpenMatSession } from '../../types';
 import { db } from '../../database/db';
@@ -13,6 +13,30 @@ const FindOpenMat: React.FC = () => {
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedType, setSelectedType] = useState('Tous');
   const [loading, setLoading] = useState(true);
+
+  const parseDates = (value?: string | null | any) => {
+    if (!value) {
+      return [];
+    }
+    // Si c'est déjà un tableau, le retourner
+    if (Array.isArray(value)) {
+      return value.map(v => String(v).trim()).filter(Boolean);
+    }
+    // Si c'est une chaîne de caractères
+    if (typeof value === 'string') {
+      return value
+        .split('|')
+        .map((date) => date.trim())
+        .filter(Boolean);
+    }
+    // Si c'est un autre type (Date, number, etc.), le convertir en chaîne
+    return [String(value).trim()].filter(Boolean);
+  };
+
+  const formatDateLabel = (value: string) => {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString('fr-FR');
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -81,29 +105,33 @@ const FindOpenMat: React.FC = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="md:col-span-3 md:border-l border-white/5">
+          <div className="md:col-span-3 md:border-l border-white/5 relative group">
             <select
-              className="w-full h-12 sm:h-14 lg:h-16 bg-transparent text-white/60 text-[9px] sm:text-[10px] lg:text-[11px] font-bold uppercase tracking-wide sm:tracking-widest px-4 sm:px-8 outline-none appearance-none cursor-pointer"
+              className="w-full h-12 sm:h-14 lg:h-16 bg-transparent text-white/60 group-hover:text-white text-[9px] sm:text-[10px] lg:text-[11px] font-bold uppercase tracking-wide sm:tracking-widest px-4 sm:px-8 pr-10 sm:pr-12 outline-none appearance-none cursor-pointer transition-all duration-300 group-hover:bg-white/[0.03] select-custom"
               value={selectedCity}
               onChange={(e) => setSelectedCity(e.target.value)}
             >
-              <option value="" className="bg-black">TOUTES LES VILLES</option>
+              <option value="">TOUTES LES VILLES</option>
               {Array.from(new Set(sessions.map(s => s.city))).map((city) => (
-                <option key={city as string} value={city as string} className="bg-black">{(city as string).toUpperCase()}</option>
+                <option key={city as string} value={city as string}>{(city as string).toUpperCase()}</option>
               ))}
             </select>
+            <ChevronDown className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-white/30 group-hover:text-white/60 transition-all duration-300 pointer-events-none group-hover:translate-y-[-40%]" />
+            <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-white/0 group-hover:bg-white/20 transition-all duration-300"></div>
           </div>
-          <div className="md:col-span-3 md:border-l border-white/5">
+          <div className="md:col-span-3 md:border-l border-white/5 relative group">
             <select
-              className="w-full h-12 sm:h-14 lg:h-16 bg-transparent text-white/60 text-[9px] sm:text-[10px] lg:text-[11px] font-bold uppercase tracking-wide sm:tracking-widest px-4 sm:px-8 outline-none appearance-none cursor-pointer"
+              className="w-full h-12 sm:h-14 lg:h-16 bg-transparent text-white/60 group-hover:text-white text-[9px] sm:text-[10px] lg:text-[11px] font-bold uppercase tracking-wide sm:tracking-widest px-4 sm:px-8 pr-10 sm:pr-12 outline-none appearance-none cursor-pointer transition-all duration-300 group-hover:bg-white/[0.03] select-custom"
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
             >
-              <option value="Tous" className="bg-black">TOUTES DISCIPLINES</option>
-              <option value="JJB" className="bg-black">JJB (GI)</option>
-              <option value="Luta Livre" className="bg-black">LUTA LIVRE (NO-GI)</option>
-              <option value="Mixte" className="bg-black">MIXTE</option>
+              <option value="Tous">TOUTES DISCIPLINES</option>
+              <option value="JJB">JJB (GI)</option>
+              <option value="Luta Livre">LUTA LIVRE (NO-GI)</option>
+              <option value="Mixte">MIXTE</option>
             </select>
+            <ChevronDown className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-white/30 group-hover:text-white/60 transition-all duration-300 pointer-events-none group-hover:translate-y-[-40%]" />
+            <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-white/0 group-hover:bg-white/20 transition-all duration-300"></div>
           </div>
         </div>
       </div>
@@ -116,7 +144,7 @@ const FindOpenMat: React.FC = () => {
               <div 
               className="group bg-white/[0.01] border border-white/5 p-4 sm:p-6 lg:p-8 xl:p-12 flex flex-col lg:flex-row gap-6 sm:gap-8 lg:gap-10 xl:gap-12 items-start lg:items-center hover:bg-white/[0.03] hover:border-white/20 transition-all duration-500"
             >
-            <div className="w-full lg:w-56 xl:w-64 h-40 sm:h-44 lg:h-48 bg-zinc-900 overflow-hidden shrink-0 flex items-center justify-center">
+            <div className="w-full lg:w-56 xl:w-64 h-32 sm:h-44 lg:h-48 bg-zinc-900 overflow-hidden shrink-0 flex items-center justify-center">
               {session.photo ? (
                 <img 
                   src={session.photo} 
@@ -148,7 +176,9 @@ const FindOpenMat: React.FC = () => {
                 </div>
                 <div className="min-w-0">
                   <p className="text-[9px] font-bold text-white/20 uppercase tracking-[0.2em] mb-2">Date</p>
-                  <p className="text-xs font-bold text-white uppercase break-words overflow-hidden">{new Date(session.date).toLocaleDateString('fr-FR')}</p>
+                  <p className="text-xs font-bold text-white uppercase break-words overflow-hidden">
+                    {parseDates(session.date).map(formatDateLabel).join(' • ')}
+                  </p>
                 </div>
                 <div className="min-w-0">
                   <p className="text-[9px] font-bold text-white/20 uppercase tracking-[0.2em] mb-2">Horaire</p>
@@ -171,7 +201,7 @@ const FindOpenMat: React.FC = () => {
             </React.Fragment>
           ))
         ) : (
-          <div className="py-40 text-center border border-white/5 bg-white/[0.01] reveal active" data-always-active="true">
+          <div className="py-24 sm:py-32 lg:py-40 text-center border border-white/5 bg-white/[0.01] reveal active" data-always-active="true">
             <p className="text-[10px] font-bold tracking-[0.4em] text-white/20 uppercase mb-4">
               {sessions.length === 0 
                 ? "Aucune session disponible pour le moment" 

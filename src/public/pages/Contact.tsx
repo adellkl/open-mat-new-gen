@@ -3,7 +3,7 @@ import { Mail, MessageCircle, Send, Plus, ArrowRight, Check, Loader2 } from 'luc
 import SEO from '../../shared/components/SEO';
 
 const FillingLine = () => (
-  <div className="relative h-[1px] w-full bg-white/10 overflow-hidden my-24">
+  <div className="relative h-[1px] w-full bg-white/10 overflow-hidden my-12 sm:my-24">
     <div className="absolute inset-0 bg-white/40 animate-[slideHorizontal_6s_infinite]" />
   </div>
 );
@@ -50,7 +50,7 @@ const Contact: React.FC = () => {
         description="Contactez l'équipe OpenMat France pour toute question, suggestion ou partenariat. Nous sommes à votre écoute pour développer la communauté grappling française."
         keywords="contact openmat, nous contacter, support openmat, partenariat jjb, question open mat"
       />
-      <div className="bg-black min-h-screen pt-24 sm:pt-32 pb-20 sm:pb-40 lg:pb-60">
+      <div className="bg-black min-h-screen pt-20 sm:pt-32 pb-16 sm:pb-40 lg:pb-60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           {/* Header Section */}
           <header className="max-w-4xl reveal active" data-always-active="true">

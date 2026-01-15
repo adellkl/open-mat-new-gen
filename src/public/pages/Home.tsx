@@ -7,7 +7,6 @@ import {
   Cpu, Hash, HardDrive, Search, Terminal as TerminalIcon, Clock
 } from 'lucide-react';
 import SEO from '../../shared/components/SEO';
-import AdSpace from '../../shared/components/AdSpace';
 import { db } from '../../database/db';
 
 interface Stat {
@@ -30,7 +29,7 @@ const TechnicalPanel = ({ side = 'left', children }: { side?: 'left' | 'right', 
 
 const BentoBlock = ({ title, desc, icon: Icon, className = "", badge, delay = 0 }: { title: string, desc: string, icon: any, className?: string, badge?: string, delay?: number }) => (
   <div
-    className={`reveal group relative overflow-hidden bg-white/[0.01] border border-white/5 p-12 transition-all duration-700 hover:border-white/20 flex flex-col ${className}`}
+    className={`reveal group relative overflow-hidden bg-white/[0.01] border border-white/5 p-8 sm:p-10 lg:p-12 transition-all duration-700 hover:border-white/20 flex flex-col ${className}`}
     style={{ transitionDelay: `${delay}ms` }}
   >
     <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -381,7 +380,7 @@ const Home: React.FC = () => {
               </p>
             </div>
           </div>
-          <div className="group relative overflow-hidden bg-white/[0.01] border border-white/5 p-12 transition-all duration-700 hover:border-white/20 flex flex-col">
+          <div className="group relative overflow-hidden bg-white/[0.01] border border-white/5 p-8 sm:p-10 lg:p-12 transition-all duration-700 hover:border-white/20 flex flex-col">
             <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
               <Plus className="h-4 w-4 text-white/20" />
             </div>
@@ -446,6 +445,72 @@ const Home: React.FC = () => {
         <FillingLine className="opacity-40" />
       </div>
 
+      {/* Open Mat Gallery */}
+      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20 md:py-28">
+        <div className="mb-12 sm:mb-16 text-center">
+          <p className="text-[9px] font-black tracking-[0.4em] text-white/30 uppercase mb-4">Open Mat</p>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tight">
+            Grappling, Luta Livre & JJB en action
+          </h2>
+          <p className="text-white/40 text-sm sm:text-base max-w-2xl mx-auto mt-4">
+            Des sessions ouvertes, des échanges techniques et l&apos;énergie brute du tatami partout en France.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 sm:gap-6">
+          <div className="md:col-span-4 h-72 sm:h-80 md:h-96 overflow-hidden border border-white/10 bg-white/[0.02]">
+            <img
+              src="/img-jjb/open-mat-rolls-1024x683.jpg"
+              alt="Open mat grappling"
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+          </div>
+          <div className="md:col-span-2 grid grid-cols-1 gap-4 sm:gap-6">
+            <div className="h-40 sm:h-44 md:h-48 overflow-hidden border border-white/10 bg-white/[0.02]">
+              <img
+                src="/img-jjb/open-mat-1.png"
+                alt="Session jjb"
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            </div>
+            <div className="h-40 sm:h-44 md:h-48 overflow-hidden border border-white/10 bg-white/[0.02]">
+              <img
+                src="/img-jjb/image.jpg"
+                alt="Luta livre open mat"
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            </div>
+          </div>
+          <div className="md:col-span-2 h-56 sm:h-64 md:h-72 overflow-hidden border border-white/10 bg-white/[0.02]">
+            <img
+              src="/img-jjb/history-of-ibjjf.jpg"
+              alt="Combat au sol"
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+          </div>
+          <div className="md:col-span-2 h-56 sm:h-64 md:h-72 overflow-hidden border border-white/10 bg-white/[0.02]">
+            <img
+              src="/img-jjb/open-mat-rolls-1024x683.jpg"
+              alt="Grappling training"
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+          </div>
+          <div className="md:col-span-2 h-56 sm:h-64 md:h-72 overflow-hidden border border-white/10 bg-white/[0.02]">
+            <img
+              src="/img-jjb/open-mat-1.png"
+              alt="Open mat france"
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Performance Stats */}
       <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20 md:py-28 lg:py-40">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12 md:gap-16 lg:gap-20">
@@ -477,7 +542,8 @@ const Home: React.FC = () => {
             </h2>
             <p className="text-white/40 text-sm sm:text-base md:text-lg lg:text-xl max-w-2xl mx-auto mb-10 sm:mb-14 md:mb-16 font-light leading-relaxed relative z-10 px-2">
               Rejoignez l'infrastructure de référence du grappling français. <br className="hidden sm:block" />
-              <span className="text-white/60">Simple. Efficace. Professionnel.</span>
+              <span className="text-white/60 block sm:inline">Open Mat JJB, Luta Livre & Grappling.</span>
+              <span className="text-white/60 block sm:inline">Simple. Efficace. Professionnel.</span>
             </p>
             <div className="relative inline-block w-full sm:w-auto">
               {/* Glow effect behind button */}
@@ -493,10 +559,6 @@ const Home: React.FC = () => {
           </div>
         </div>
 
-        {/* Espace Publicitaire */}
-        <div className="flex justify-center mt-10 sm:mt-12 md:mt-16">
-          <AdSpace size="medium" />
-        </div>
       </section>
 
       <style>{`
