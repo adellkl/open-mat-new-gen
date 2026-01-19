@@ -46,9 +46,9 @@ const Contact: React.FC = () => {
   return (
     <>
       <SEO
-        title="Contact - OpenMat France | Nous Contacter"
-        description="Contactez l'équipe OpenMat France pour toute question, suggestion ou partenariat. Nous sommes à votre écoute pour développer la communauté grappling française."
-        keywords="contact openmat, nous contacter, support openmat, partenariat jjb, question open mat"
+        title="Contactez OpenMat France | Support & Partenariats JJB"
+        description="💬 Besoin d'aide ? Questions sur OpenMat France ? Proposition de partenariat pour votre club JJB ? Contactez-nous - Réponse sous 24h. Email : adelloukal2@gmail.com"
+        keywords="contact openmat, nous contacter, support openmat, partenariat jjb, question open mat, aide openmat france, partenariat club jjb, collaboration académie grappling"
       />
       <div className="bg-black min-h-screen pt-20 sm:pt-32 pb-16 sm:pb-40 lg:pb-60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">

@@ -81,7 +81,7 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-[200] py-3 lg:py-8">
+      <nav className="fixed top-0 left-0 right-0 z-[200] py-3 lg:py-8" role="navigation" aria-label="Navigation principale">
         <div className="max-w-[90rem] mx-auto px-3 lg:px-12">
           <div className={`relative flex items-center justify-between px-4 lg:px-12 py-3 lg:py-6 transition-all duration-500 ${
             scrolled 
@@ -109,12 +109,14 @@ const Navbar: React.FC = () => {
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2" role="menubar">
               {navItems.map((item, index) => (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`relative px-6 py-3 text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-300 focus:outline-none focus-visible:outline-none focus:ring-0 focus:shadow-none active:outline-none [-webkit-tap-highlight-color:transparent] select-none group overflow-hidden
+                  role="menuitem"
+                  aria-current={isActive(item.path) ? 'page' : undefined}
+                  className={`relative px-6 py-3 text-[11px] font-black uppercase tracking-[0.2em] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/40 active:outline-none [-webkit-tap-highlight-color:transparent] select-none group overflow-hidden
                     ${isActive(item.path)
                       ? 'text-white'
                       : 'text-white/50 hover:text-white'
@@ -143,8 +145,10 @@ const Navbar: React.FC = () => {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="lg:hidden relative w-10 h-10 flex items-center justify-center text-white transition-all duration-300 rounded-sm border border-white/10 focus:outline-none"
-              aria-label="Toggle menu"
+              className="lg:hidden relative w-10 h-10 flex items-center justify-center text-white transition-all duration-300 rounded-sm border border-white/10 focus:outline-none focus:ring-2 focus:ring-white/40"
+              aria-label={isOpen ? "Fermer le menu" : "Ouvrir le menu"}
+              aria-expanded={isOpen}
+              aria-controls="mobile-menu"
             >
               <div className="w-5 h-4 flex flex-col justify-between items-center relative">
                 <span className={`h-[2px] w-full bg-white transition-all duration-500 ease-in-out origin-center ${
@@ -176,19 +180,24 @@ const Navbar: React.FC = () => {
 
       {/* Mobile Menu Panel */}
       <div
+        id="mobile-menu"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu mobile"
         className={`fixed top-0 right-0 bottom-0 w-full bg-black/98 backdrop-blur-2xl border-l border-white/10 z-[195] lg:hidden transition-all duration-700 ease-out overflow-y-auto ${isOpen
             ? 'translate-x-0'
             : 'translate-x-full'
           }`}
       >
         <div className="h-full flex flex-col justify-center p-6">
-          <div className="space-y-3">
+          <nav className="space-y-3" role="navigation" aria-label="Menu mobile">
             {/* Menu Items */}
             {navItems.map((item, index) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`block relative px-4 py-4 text-sm font-bold uppercase tracking-[0.2em] transition-colors duration-200 text-center focus:outline-none [-webkit-tap-highlight-color:transparent] ${isActive(item.path)
+                aria-current={isActive(item.path) ? 'page' : undefined}
+                className={`block relative px-4 py-4 text-sm font-bold uppercase tracking-[0.2em] transition-colors duration-200 text-center focus:outline-none focus:ring-2 focus:ring-white/40 [-webkit-tap-highlight-color:transparent] ${isActive(item.path)
                     ? 'text-white'
                     : 'text-white/50'
                   }`}
@@ -201,30 +210,30 @@ const Navbar: React.FC = () => {
                 {item.label}
               </Link>
             ))}
+          </nav>
+          
+          {/* Footer Info */}
+          <div className="mt-12 pt-6 border-t border-white/10 text-center space-y-4">
+            <p className="text-[9px] font-bold tracking-[0.2em] text-white/30 uppercase">
+              OPENMAT<span className="text-white/20">.FR</span>
+            </p>
             
-            {/* Footer Info */}
-            <div className="mt-12 pt-6 border-t border-white/10 text-center space-y-4">
-              <p className="text-[9px] font-bold tracking-[0.2em] text-white/30 uppercase">
-                OPENMAT<span className="text-white/20">.FR</span>
-              </p>
-              
-              {/* Boutons CTA */}
-              <div className="flex flex-col gap-2 px-4">
-                <Link
-                  to="/explorer"
-                  className="px-6 py-3 bg-white text-black text-xs font-bold uppercase tracking-[0.15em] transition-opacity duration-200 active:opacity-80"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Explorer
-                </Link>
-                <Link
-                  to="/publier"
-                  className="px-6 py-3 border border-white/20 text-white text-xs font-bold uppercase tracking-[0.15em] transition-opacity duration-200 active:opacity-80"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Publier
-                </Link>
-              </div>
+            {/* Boutons CTA */}
+            <div className="flex flex-col gap-2 px-4">
+              <Link
+                to="/explorer"
+                className="px-6 py-3 bg-white text-black text-xs font-bold uppercase tracking-[0.15em] transition-opacity duration-200 active:opacity-80"
+                onClick={() => setIsOpen(false)}
+              >
+                Explorer
+              </Link>
+              <Link
+                to="/publier"
+                className="px-6 py-3 border border-white/20 text-white text-xs font-bold uppercase tracking-[0.15em] transition-opacity duration-200 active:opacity-80"
+                onClick={() => setIsOpen(false)}
+              >
+                Publier
+              </Link>
             </div>
           </div>
         </div>
@@ -237,7 +246,7 @@ const Navbar: React.FC = () => {
           </div>
         </div>
 
-        <style jsx>{`
+        <style>{`
           .marquee-content {
             display: flex;
             width: fit-content;

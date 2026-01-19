@@ -1,12 +1,47 @@
 # robots.txt pour OpenMat France
+# Référencement naturel optimisé pour Google, Bing, etc.
 
+# Règles pour tous les moteurs de recherche
 User-agent: *
 Allow: /
+Allow: /explorer
+Allow: /publier
+Allow: /a-propos
+Allow: /contact
+Allow: /confidentialite
 Disallow: /admin/
 Disallow: /admin
 
-# Sitemap
-Sitemap: https://www.openmatfrance.fr/sitemap.xml
+# Fichiers et dossiers à ne pas indexer
+Disallow: /*.json$
+Disallow: /api/
 
-# Fréquence de crawl (suggérée)
+# Google
+User-agent: Googlebot
+Allow: /
+Disallow: /admin/
+Crawl-delay: 0.5
+
+# Google Images
+User-agent: Googlebot-Image
+Allow: /img-jjb/
+Allow: /public/
+
+# Bing
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
 Crawl-delay: 1
+
+# Yandex
+User-agent: Yandex
+Allow: /
+Disallow: /admin/
+Crawl-delay: 2
+
+# Sitemaps
+Sitemap: https://www.openmatfrance.fr/sitemap.xml
+Sitemap: https://www.openmatfrance.fr/sitemap-sessions.xml
+
+# Host (domaine principal)
+Host: https://www.openmatfrance.fr

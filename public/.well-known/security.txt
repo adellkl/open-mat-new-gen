@@ -1,13 +1,4 @@
 Contact: mailto:adelloukal2@gmail.com
-Contact: https://www.openmatfrance.fr/contact
-Expires: 2027-01-14T23:59:59.000Z
+Expires: 2027-01-19T00:00:00.000Z
 Preferred-Languages: fr, en
 Canonical: https://www.openmatfrance.fr/.well-known/security.txt
-Policy: https://www.openmatfrance.fr/confidentialite
-
-# Politique de divulgation responsable
-# Si vous découvrez une vulnérabilité de sécurité, veuillez nous contacter à adelloukal2@gmail.com
-# Nous vous répondrons dans les 48 heures et travaillerons avec vous pour résoudre le problème.
-
-# Remerciements
-# Merci de nous aider à garder OpenMat France sécurisé pour toute la communauté.

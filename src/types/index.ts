@@ -12,6 +12,7 @@ export interface OpenMatSession {
   description: string;
   status: 'pending' | 'approved';
   photo?: string; // URL ou base64 de la photo
+  likes_count?: number; // Nombre total de likes
   coordinates: {
     lat: number;
     lng: number;

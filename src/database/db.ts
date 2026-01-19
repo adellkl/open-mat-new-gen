@@ -32,6 +32,7 @@ export const db = {
         description: row.description,
         status: row.status,
         photo: row.photo || undefined,
+        likes_count: row.likes_count || 0,
         coordinates: {
           lat: row.lat || 48.8566,
           lng: row.lng || 2.3522,
@@ -246,6 +247,124 @@ export const db = {
     } catch (error) {
       console.error("❌ Erreur de stats:", error);
       return null;
+    }
+  },
+
+  // Ajouter un like à une session
+  addLike: async (sessionId: string, userId: string) => {
+    try {
+      // Vérifier si l'utilisateur a déjà liké
+      const existing = await sql(
+        'SELECT id FROM session_likes WHERE session_id = $1 AND user_id = $2',
+        [sessionId, userId]
+      );
+      
+      if (existing.length > 0) {
+        return { success: false, message: 'Déjà liké' };
+      }
+
+      // Ajouter le like
+      await sql(
+        'INSERT INTO session_likes (session_id, user_id) VALUES ($1, $2)',
+        [sessionId, userId]
+      );
+
+      // Mettre à jour le compteur
+      await sql(
+        'UPDATE open_mats SET likes_count = COALESCE(likes_count, 0) + 1 WHERE id = $1',
+        [sessionId]
+      );
+
+      // Récupérer le nouveau nombre de likes
+      const result = await sql(
+        'SELECT likes_count FROM open_mats WHERE id = $1',
+        [sessionId]
+      );
+
+      return { 
+        success: true, 
+        likes_count: result[0]?.likes_count || 1 
+      };
+    } catch (error) {
+      console.error("❌ Erreur d'ajout de like:", error);
+      return { success: false, error };
+    }
+  },
+
+  // Retirer un like d'une session
+  removeLike: async (sessionId: string, userId: string) => {
+    try {
+      // Supprimer le like
+      const result = await sql(
+        'DELETE FROM session_likes WHERE session_id = $1 AND user_id = $2 RETURNING id',
+        [sessionId, userId]
+      );
+
+      if (result.length === 0) {
+        return { success: false, message: 'Like non trouvé' };
+      }
+
+      // Mettre à jour le compteur
+      await sql(
+        'UPDATE open_mats SET likes_count = GREATEST(COALESCE(likes_count, 0) - 1, 0) WHERE id = $1',
+        [sessionId]
+      );
+
+      // Récupérer le nouveau nombre de likes
+      const newCount = await sql(
+        'SELECT likes_count FROM open_mats WHERE id = $1',
+        [sessionId]
+      );
+
+      return { 
+        success: true, 
+        likes_count: newCount[0]?.likes_count || 0 
+      };
+    } catch (error) {
+      console.error("❌ Erreur de suppression de like:", error);
+      return { success: false, error };
+    }
+  },
+
+  // Vérifier si un utilisateur a liké une session
+  hasLiked: async (sessionId: string, userId: string): Promise<boolean> => {
+    try {
+      const result = await sql(
+        'SELECT id FROM session_likes WHERE session_id = $1 AND user_id = $2',
+        [sessionId, userId]
+      );
+      return result.length > 0;
+    } catch (error) {
+      console.error("❌ Erreur de vérification de like:", error);
+      return false;
+    }
+  },
+
+  // Récupérer le nombre de likes d'une session
+  getLikesCount: async (sessionId: string): Promise<number> => {
+    try {
+      const result = await sql(
+        'SELECT likes_count FROM open_mats WHERE id = $1',
+        [sessionId]
+      );
+      return result[0]?.likes_count || 0;
+    } catch (error) {
+      console.error("❌ Erreur de récupération des likes:", error);
+      return 0;
+    }
+  },
+
+  // Récupérer les sessions likées par un utilisateur
+  getUserLikedSessions: async (userId: string): Promise<string[]> => {
+    try {
+      const result = await sql(
+        'SELECT session_id FROM session_likes WHERE user_id = $1',
+        [userId]
+      );
+      return result.map(row => row.session_id);
+    } catch (error) {
+      console.error("❌ Erreur de récupération des sessions likées:", error);
+      return [];
     }
   }
 };

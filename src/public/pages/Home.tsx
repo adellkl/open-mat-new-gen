@@ -7,6 +7,8 @@ import {
   Cpu, Hash, HardDrive, Search, Terminal as TerminalIcon, Clock
 } from 'lucide-react';
 import SEO from '../../shared/components/SEO';
+import LazyImage from '../../shared/components/LazyImage';
+import { OrganizationStructuredData, WebSiteStructuredData } from '../../shared/components/StructuredData';
 import { db } from '../../database/db';
 
 interface Stat {
@@ -239,10 +241,13 @@ const Home: React.FC = () => {
   return (
     <div className="relative bg-black min-h-screen selection:bg-white selection:text-black">
       <SEO
-        title="OpenMat France - Plateforme de Sessions JJB & Luta Livre | Grappling"
-        description="Découvrez et publiez des sessions d'Open Mat de Jiu-Jitsu Brésilien (JJB) et Luta Livre partout en France. Rejoignez la communauté grappling française."
-        keywords="open mat, JJB, jiu-jitsu brésilien, luta livre, grappling, jiu jitsu, bjj, no-gi, gi, combat au sol, france"
+        title="OpenMat France - Trouvez des Sessions JJB, Luta Livre & Grappling près de chez vous"
+        description="🥋 Plateforme gratuite pour trouver et publier des sessions Open Mat de JJB, Luta Livre et Grappling en France. +100 clubs partenaires à Paris, Lyon, Marseille et toute la France. Débutants et confirmés bienvenus."
+        keywords="open mat france, open mat paris, open mat lyon, open mat marseille, jjb open mat, luta livre france, jiu jitsu brésilien, bjj france, grappling france, no-gi france, gi jjb, combat au sol, entraînement jjb, sparring jjb, rouler jjb, académie jjb france, club jjb, open mat gratuit, open mat débutant, trouver open mat, sessions jjb, rolling jjb, submission grappling"
+        type="website"
       />
+      <OrganizationStructuredData />
+      <WebSiteStructuredData />
       <div className="fixed inset-0 bg-grid z-0 pointer-events-none opacity-40"></div>
 
       {/* SCANLINE EFFECT */}
@@ -458,54 +463,54 @@ const Home: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4 sm:gap-6">
-          <div className="md:col-span-4 h-72 sm:h-80 md:h-96 overflow-hidden border border-white/10 bg-white/[0.02]">
-            <img
+          <div className="md:col-span-4 h-72 sm:h-80 md:h-96 border border-white/10">
+            <LazyImage
               src="/img-jjb/open-mat-rolls-1024x683.jpg"
-              alt="Open mat grappling"
+              alt="Open mat grappling - Session d'entraînement de Jiu-Jitsu Brésilien"
               className="h-full w-full object-cover"
-              loading="lazy"
+              placeholderClassName="h-full w-full"
             />
           </div>
           <div className="md:col-span-2 grid grid-cols-1 gap-4 sm:gap-6">
-            <div className="h-40 sm:h-44 md:h-48 overflow-hidden border border-white/10 bg-white/[0.02]">
-              <img
+            <div className="h-40 sm:h-44 md:h-48 border border-white/10">
+              <LazyImage
                 src="/img-jjb/open-mat-1.png"
-                alt="Session jjb"
+                alt="Session JJB - Entraînement de grappling en gi"
                 className="h-full w-full object-cover"
-                loading="lazy"
+                placeholderClassName="h-full w-full"
               />
             </div>
-            <div className="h-40 sm:h-44 md:h-48 overflow-hidden border border-white/10 bg-white/[0.02]">
-              <img
+            <div className="h-40 sm:h-44 md:h-48 border border-white/10">
+              <LazyImage
                 src="/img-jjb/image.jpg"
-                alt="Luta livre open mat"
+                alt="Luta livre open mat - Combat au sol no-gi"
                 className="h-full w-full object-cover"
-                loading="lazy"
+                placeholderClassName="h-full w-full"
               />
             </div>
           </div>
-          <div className="md:col-span-2 h-56 sm:h-64 md:h-72 overflow-hidden border border-white/10 bg-white/[0.02]">
-            <img
+          <div className="md:col-span-2 h-56 sm:h-64 md:h-72 border border-white/10">
+            <LazyImage
               src="/img-jjb/history-of-ibjjf.jpg"
-              alt="Combat au sol"
+              alt="Combat au sol - Histoire du grappling brésilien"
               className="h-full w-full object-cover"
-              loading="lazy"
+              placeholderClassName="h-full w-full"
             />
           </div>
-          <div className="md:col-span-2 h-56 sm:h-64 md:h-72 overflow-hidden border border-white/10 bg-white/[0.02]">
-            <img
+          <div className="md:col-span-2 h-56 sm:h-64 md:h-72 border border-white/10">
+            <LazyImage
               src="/img-jjb/open-mat-rolls-1024x683.jpg"
-              alt="Grappling training"
+              alt="Grappling training - Entraînement de Jiu-Jitsu en France"
               className="h-full w-full object-cover"
-              loading="lazy"
+              placeholderClassName="h-full w-full"
             />
           </div>
-          <div className="md:col-span-2 h-56 sm:h-64 md:h-72 overflow-hidden border border-white/10 bg-white/[0.02]">
-            <img
+          <div className="md:col-span-2 h-56 sm:h-64 md:h-72 border border-white/10">
+            <LazyImage
               src="/img-jjb/open-mat-1.png"
-              alt="Open mat france"
+              alt="Open mat france - Communauté JJB française"
               className="h-full w-full object-cover"
-              loading="lazy"
+              placeholderClassName="h-full w-full"
             />
           </div>
         </div>

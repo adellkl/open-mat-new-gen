@@ -534,9 +534,10 @@ const AddOpenMat: React.FC = () => {
   return (
     <>
       <SEO 
-        title="Publier une Session Open Mat - JJB & Luta Livre | OpenMat France"
-        description="Publiez votre session d'Open Mat de Jiu-Jitsu Brésilien ou Luta Livre. Faites connaître votre académie et attirez de nouveaux pratiquants."
-        keywords="publier open mat, créer session jjb, annoncer open mat, session grappling, académie jjb, luta livre france"
+        title="Publier votre Session Open Mat JJB Gratuitement | Attirez de nouveaux pratiquants"
+        description="📢 Publiez gratuitement votre session Open Mat de JJB, Luta Livre ou Grappling. Touchez des milliers de pratiquants en France. Inscription simple et rapide. Visible en 24h."
+        keywords="publier open mat, créer session jjb, annoncer open mat, session grappling, académie jjb, luta livre france, organiser open mat, promouvoir club jjb, attirer pratiquants jjb, visibilité académie jjb, marketing club grappling"
+        type="website"
       />
       <div className="relative bg-black min-h-screen pt-8 pb-20 overflow-x-hidden">
         <div className="fixed inset-0 bg-grid z-0 pointer-events-none opacity-40"></div>

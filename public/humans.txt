@@ -7,17 +7,22 @@ Description: Plateforme de découverte et publication de sessions Open Mat de JJ
 Localisation: France
 
 /* SITE */
-Dernière mise à jour: 2026/01/14
+Dernière mise à jour: 2026/01/19
 Langues: Français
 Doctype: HTML5
 IDE: Cursor, VS Code
-Technologies: React, TypeScript, Vite, Tailwind CSS, Neon PostgreSQL
+Technologies: React 19, TypeScript 5.8, Vite 6, Tailwind CSS 3.4
+Backend: Neon PostgreSQL Serverless
+Hébergement: Vercel (Edge Network)
+Standards: WCAG 2.1, SEO optimisé, Performance optimale
+Compatibilité: Chrome, Firefox, Safari, Edge (versions récentes)
 
 /* REMERCIEMENTS */
-Merci à la communauté grappling française pour son soutien.
+Merci à la communauté grappling française pour son soutien
+Tous les clubs et académies partenaires
+Les pratiquants qui font vivre cette plateforme
 Icônes: Lucide React
 Polices: Inter (Google Fonts)
-Hébergement: À définir
 Base de données: Neon PostgreSQL Serverless
 
 /* CONTRIBUER */

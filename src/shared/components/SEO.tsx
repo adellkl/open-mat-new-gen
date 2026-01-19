@@ -7,6 +7,10 @@ interface SEOProps {
   keywords?: string;
   ogImage?: string;
   canonical?: string;
+  author?: string;
+  type?: 'website' | 'article' | 'event';
+  publishedTime?: string;
+  modifiedTime?: string;
 }
 
 const SEO: React.FC<SEOProps> = ({
@@ -14,7 +18,11 @@ const SEO: React.FC<SEOProps> = ({
   description = 'Découvrez et publiez des sessions d\'Open Mat de Jiu-Jitsu Brésilien et Luta Livre partout en France. Rejoignez la communauté grappling française.',
   keywords = 'open mat, JJB, jiu-jitsu brésilien, luta livre, grappling, bjj, no-gi',
   ogImage = 'https://www.openmatfrance.fr/og-image.jpg',
-  canonical
+  canonical,
+  author = 'OpenMat France',
+  type = 'website',
+  publishedTime,
+  modifiedTime
 }) => {
   const location = useLocation();
   
@@ -85,7 +93,40 @@ const SEO: React.FC<SEOProps> = ({
     }
     linkCanonical.setAttribute('href', canonical || `https://www.openmatfrance.fr${location.pathname}`);
     
-  }, [title, description, keywords, ogImage, canonical, location.pathname]);
+    // Mettre à jour ou créer les meta tags supplémentaires
+    const updateOrCreateMeta = (name: string, content: string, isProperty = false) => {
+      const attribute = isProperty ? 'property' : 'name';
+      let meta = document.querySelector(`meta[${attribute}="${name}"]`);
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute(attribute, name);
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute('content', content);
+    };
+    
+    // Meta tags additionnels
+    updateOrCreateMeta('author', author);
+    updateOrCreateMeta('og:type', type, true);
+    updateOrCreateMeta('og:site_name', 'OpenMat France', true);
+    updateOrCreateMeta('og:locale', 'fr_FR', true);
+    
+    if (publishedTime) {
+      updateOrCreateMeta('article:published_time', publishedTime, true);
+    }
+    if (modifiedTime) {
+      updateOrCreateMeta('article:modified_time', modifiedTime, true);
+    }
+    
+    // Twitter Card
+    updateOrCreateMeta('twitter:card', 'summary_large_image');
+    updateOrCreateMeta('twitter:site', '@openmatfrance');
+    updateOrCreateMeta('twitter:creator', '@openmatfrance');
+    
+    // Meta robots
+    updateOrCreateMeta('robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
+    
+  }, [title, description, keywords, ogImage, canonical, location.pathname, author, type, publishedTime, modifiedTime]);
   
   return null;
 };
