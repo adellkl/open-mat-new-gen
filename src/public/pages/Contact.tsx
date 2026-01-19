@@ -147,48 +147,48 @@ const Contact: React.FC = () => {
                       </div>
                     )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-                      <div className="space-y-3 sm:space-y-4">
-                        <label className="text-[8px] sm:text-[9px] font-black text-white/30 uppercase tracking-[0.3em] sm:tracking-[0.4em] ml-1">Nom Complet</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] ml-1">Nom Complet</label>
                         <input
                           required
                           type="text"
-                          className="w-full bg-white/[0.07] border border-white/20 h-12 sm:h-14 px-4 sm:px-6 text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider sm:tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10"
+                          className="w-full bg-white/[0.07] border border-white/20 h-10 sm:h-11 px-3 sm:px-4 text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wide outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/40"
                           placeholder="JEAN DUPONT"
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         />
                       </div>
-                      <div className="space-y-3 sm:space-y-4">
-                        <label className="text-[8px] sm:text-[9px] font-black text-white/30 uppercase tracking-[0.3em] sm:tracking-[0.4em] ml-1">Email</label>
+                      <div className="space-y-2">
+                        <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] ml-1">Email</label>
                         <input
                           required
                           type="email"
-                          className="w-full bg-white/[0.07] border border-white/20 h-12 sm:h-14 px-4 sm:px-6 text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider sm:tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10"
-                          placeholder="JEAN@EXAMPLE.COM"
+                          className="w-full bg-white/[0.07] border border-white/20 h-10 sm:h-11 px-3 sm:px-4 text-white text-[9px] sm:text-[10px] font-bold lowercase tracking-normal outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/40"
+                          placeholder="jean@example.com"
                           value={formData.email}
                           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         />
                       </div>
                     </div>
 
-                    <div className="space-y-3 sm:space-y-4">
-                      <label className="text-[8px] sm:text-[9px] font-black text-white/30 uppercase tracking-[0.3em] sm:tracking-[0.4em] ml-1">Sujet</label>
+                    <div className="space-y-2">
+                      <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] ml-1">Sujet</label>
                       <input
                         required
                         type="text"
-                        className="w-full bg-white/[0.07] border border-white/20 h-12 sm:h-14 px-4 sm:px-6 text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider sm:tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10"
+                        className="w-full bg-white/[0.07] border border-white/20 h-10 sm:h-11 px-3 sm:px-4 text-white text-[9px] sm:text-[10px] font-bold uppercase tracking-wide outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/40"
                         placeholder="COMMENT POUVONS-NOUS VOUS AIDER ?"
                         value={formData.subject}
                         onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                       />
                     </div>
 
-                    <div className="space-y-3 sm:space-y-4">
-                      <label className="text-[8px] sm:text-[9px] font-black text-white/30 uppercase tracking-[0.3em] sm:tracking-[0.4em] ml-1">Message</label>
+                    <div className="space-y-2">
+                      <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] ml-1">Message</label>
                       <textarea
                         required
-                        className="w-full bg-white/[0.07] border border-white/20 p-4 sm:p-6 min-h-[160px] sm:min-h-[200px] text-white text-[10px] sm:text-xs font-medium leading-relaxed outline-none focus:border-white/60 transition-all placeholder:text-white/10"
+                        className="w-full bg-white/[0.07] border border-white/20 p-3 sm:p-4 min-h-[140px] sm:min-h-[160px] text-white text-[9px] sm:text-[10px] font-medium leading-relaxed outline-none focus:border-white/60 transition-all placeholder:text-white/40"
                         placeholder="VOTRE MESSAGE ICI..."
                         value={formData.message}
                         onChange={(e) => setFormData({ ...formData, message: e.target.value })}
