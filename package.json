@@ -21,6 +21,7 @@
     "generate-sitemap": "node scripts/generate-sitemap.js"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "@neondatabase/serverless": "0.10.4",
     "lucide-react": "^0.562.0",
     "react": "^19.2.3",

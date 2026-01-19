@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Mail, MessageCircle, Send, Plus, ArrowRight, Check, Loader2 } from 'lucide-react';
+import { Mail, MessageCircle, Send, Plus, ArrowRight, Check, Loader2, AlertCircle } from 'lucide-react';
+import emailjs from '@emailjs/browser';
 import SEO from '../../shared/components/SEO';
 
 const FillingLine = () => (
@@ -24,6 +25,7 @@ const ContactInfoCard = ({ icon: Icon, label, value, delay = 0 }: { icon: any; l
 const Contact: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -34,13 +36,31 @@ const Contact: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(false);
 
-    // Simuler l'envoi
-    setTimeout(() => {
+    // Envoi réel avec EmailJS
+    emailjs.send(
+      'service_e22vuqz',
+      'template_yuw54r4',
+      {
+        from_name: formData.name,
+        from_email: formData.email,
+        subject: formData.subject,
+        message: formData.message,
+      },
+      'Sd6qtk3ZZ8OuP3eLR'
+    )
+    .then(() => {
       setSubmitted(true);
       setIsSubmitting(false);
       setFormData({ name: '', email: '', subject: '', message: '' });
-    }, 1000);
+    })
+    .catch((err) => {
+      console.error('Erreur EmailJS:', err);
+      setError(true);
+      setIsSubmitting(false);
+      setTimeout(() => setError(false), 5000);
+    });
   };
 
   return (
@@ -117,6 +137,16 @@ const Contact: React.FC = () => {
                   </div>
 
                   <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+                    {/* Message d'erreur */}
+                    {error && (
+                      <div className="p-4 border border-red-500/20 bg-red-500/5 flex items-center gap-3 text-red-500">
+                        <AlertCircle className="h-5 w-5 shrink-0" />
+                        <p className="text-[10px] font-bold uppercase tracking-wider">
+                          Erreur d'envoi. Veuillez réessayer ou nous contacter directement.
+                        </p>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                       <div className="space-y-3 sm:space-y-4">
                         <label className="text-[8px] sm:text-[9px] font-black text-white/30 uppercase tracking-[0.3em] sm:tracking-[0.4em] ml-1">Nom Complet</label>
