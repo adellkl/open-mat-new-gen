@@ -40,27 +40,27 @@ const Contact: React.FC = () => {
 
     // Envoi réel avec EmailJS
     emailjs.send(
-      'service_e22vuqz',
-      'template_yuw54r4',
+      import.meta.env.VITE_EMAILJS_SERVICE_ID,
+      import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
       {
         from_name: formData.name,
         from_email: formData.email,
         subject: formData.subject,
         message: formData.message,
       },
-      'Sd6qtk3ZZ8OuP3eLR'
+      import.meta.env.VITE_EMAILJS_PUBLIC_KEY
     )
-    .then(() => {
-      setSubmitted(true);
-      setIsSubmitting(false);
-      setFormData({ name: '', email: '', subject: '', message: '' });
-    })
-    .catch((err) => {
-      console.error('Erreur EmailJS:', err);
-      setError(true);
-      setIsSubmitting(false);
-      setTimeout(() => setError(false), 5000);
-    });
+      .then(() => {
+        setSubmitted(true);
+        setIsSubmitting(false);
+        setFormData({ name: '', email: '', subject: '', message: '' });
+      })
+      .catch((err) => {
+        console.error('Erreur EmailJS:', err);
+        setError(true);
+        setIsSubmitting(false);
+        setTimeout(() => setError(false), 5000);
+      });
   };
 
   return (

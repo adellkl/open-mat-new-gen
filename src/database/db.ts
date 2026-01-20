@@ -3,8 +3,11 @@ import { neon } from '@neondatabase/serverless';
 import { OpenMatSession } from '../types/index';
 
 // Chaîne de connexion Neon PostgreSQL avec connection pooling
-// Format: postgresql://user:password@host/database?options
-const connectionString = import.meta.env.VITE_DATABASE_URL || 'postgresql://neondb_owner:npg_WP2O1xGwFgQD@ep-tiny-breeze-ahe855eo-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
+const connectionString = import.meta.env.VITE_DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error('VITE_DATABASE_URL environment variable is not set');
+}
 
 // Initialisation de Neon
 const sql = neon(connectionString);
