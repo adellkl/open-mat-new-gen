@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Lock, EyeOff, UserCheck, Plus, ArrowRight, Database, Clock, FileText, Server, Globe, AlertCircle } from 'lucide-react';
 
@@ -39,6 +39,11 @@ const PrivacySection = ({ title, children, delay = 0 }: { title: string; childre
 );
 
 const Privacy: React.FC = () => {
+  // Auto-scroll en haut au chargement de la page
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   return (
     <div className="bg-black min-h-screen pt-24 sm:pt-32 pb-20 sm:pb-40 lg:pb-60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">

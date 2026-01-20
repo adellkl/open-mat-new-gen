@@ -39,6 +39,7 @@ export const db = {
         status: row.status,
         photo: row.photo || undefined,
         likes_count: row.likes_count || 0,
+        instagram: row.instagram || undefined,
         coordinates: {
           lat: row.lat || 48.8566,
           lng: row.lng || 2.3522,
@@ -55,8 +56,20 @@ export const db = {
   // Ajouter une nouvelle session d'Open Mat
   addSession: async (session: Omit<OpenMatSession, 'id' | 'status'>) => {
     const hasPhoto = session.photo !== undefined && session.photo !== null;
+    const hasInstagram = session.instagram !== undefined && session.instagram !== null && session.instagram.trim() !== '';
     
-    if (hasPhoto) {
+    if (hasPhoto && hasInstagram) {
+      return sql(
+        `INSERT INTO open_mats (title, club, city, address, date, time_range, price, discipline, description, photo, instagram)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         RETURNING id`,
+        [
+          session.title, session.club, session.city, session.address, 
+          session.date, session.time, session.price, session.type, 
+          session.description, session.photo, session.instagram
+        ]
+      );
+    } else if (hasPhoto) {
       return sql(
         `INSERT INTO open_mats (title, club, city, address, date, time_range, price, discipline, description, photo)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -65,6 +78,17 @@ export const db = {
           session.title, session.club, session.city, session.address, 
           session.date, session.time, session.price, session.type, 
           session.description, session.photo
+        ]
+      );
+    } else if (hasInstagram) {
+      return sql(
+        `INSERT INTO open_mats (title, club, city, address, date, time_range, price, discipline, description, instagram)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         RETURNING id`,
+        [
+          session.title, session.club, session.city, session.address, 
+          session.date, session.time, session.price, session.type, 
+          session.description, session.instagram
         ]
       );
     } else {
@@ -141,6 +165,10 @@ export const db = {
     if (session.photo !== undefined) {
       fields.push(`photo = $${paramIndex++}`);
       values.push(session.photo);
+    }
+    if (session.instagram !== undefined) {
+      fields.push(`instagram = $${paramIndex++}`);
+      values.push(session.instagram.trim() || null);
     }
 
     if (fields.length === 0) return;

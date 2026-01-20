@@ -9,9 +9,9 @@ import LoadingSpinner from '../../shared/components/LoadingSpinner';
 import ErrorMessage from '../../shared/components/ErrorMessage';
 import SessionCard from '../../shared/components/SessionCard';
 import SearchFilters from '../../shared/components/SearchFilters';
-import { useFavorites } from '../../utils/useFavorites';
 import { useLikes } from '../../utils/useLikes';
 import { sortSessions, SortOption } from '../../utils/sortSessions';
+import { filterActiveSessions } from '../../utils/sessionFilters';
 
 const FindOpenMat: React.FC = () => {
   const navigate = useNavigate();
@@ -23,14 +23,21 @@ const FindOpenMat: React.FC = () => {
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { favorites, toggleFavorite, isFavorite, favoritesCount } = useFavorites();
+  
+  // Hook useLikes unifié pour gérer les favoris
   const { 
     toggleLike, 
     isLiked, 
     getLikeCount, 
     loadMultipleLikeCounts,
-    loading: likesLoading 
+    loading: likesLoading,
+    likesCount 
   } = useLikes();
+
+  // Auto-scroll en haut au chargement de la page
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
 
   const parseDates = (value?: string | null | any) => {
     if (!value) {
@@ -52,6 +59,10 @@ const FindOpenMat: React.FC = () => {
   };
 
   const formatDateLabel = (value: string) => {
+    // Ne pas formatter les dates récurrentes
+    if (value === 'RÉCURRENT' || value === '2099-12-31') {
+      return value;
+    }
     const parsed = new Date(value);
     return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString('fr-FR');
   };
@@ -61,10 +72,12 @@ const FindOpenMat: React.FC = () => {
     setError(null);
     try {
       const data = await db.getSessions('approved');
-      setSessions(data);
+      // Filtrer uniquement les sessions actives (non expirées)
+      const activeSessions = filterActiveSessions(data);
+      setSessions(activeSessions);
       
       // Charger les compteurs de likes pour toutes les sessions
-      const sessionIds = data.map(s => s.id);
+      const sessionIds = activeSessions.map(s => s.id);
       await loadMultipleLikeCounts(sessionIds);
     } catch (err) {
       console.error("Erreur de chargement:", err);
@@ -89,13 +102,13 @@ const FindOpenMat: React.FC = () => {
                            session.city.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCity = selectedCity === '' || session.city === selectedCity;
       const matchesType = selectedType === 'Tous' || session.type === selectedType;
-      const matchesFavorites = !showOnlyFavorites || isFavorite(session.id);
+      const matchesFavorites = !showOnlyFavorites || isLiked(session.id);
       return matchesSearch && matchesCity && matchesType && matchesFavorites;
     });
     
     // Appliquer le tri
     return sortSessions(filtered, sortBy);
-  }, [searchTerm, selectedCity, selectedType, sessions, sortBy, showOnlyFavorites, isFavorite]);
+  }, [searchTerm, selectedCity, selectedType, sessions, sortBy, showOnlyFavorites, isLiked]);
 
   if (loading) {
     return <LoadingSpinner fullScreen text="Chargement des sessions" />;
@@ -149,7 +162,7 @@ const FindOpenMat: React.FC = () => {
         onSortChange={setSortBy}
         showOnlyFavorites={showOnlyFavorites}
         onToggleFavorites={() => setShowOnlyFavorites(!showOnlyFavorites)}
-        favoritesCount={favoritesCount}
+        favoritesCount={likesCount}
         cities={Array.from(new Set(sessions.map(s => s.city)))}
       />
 

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { OpenMatSession } from '../../types';
 import LazyImage from './LazyImage';
+import { isRecurring, getRecurrenceDay } from '../../utils/sessionFilters';
 
 interface SessionCardProps {
   session: OpenMatSession;
@@ -26,6 +27,21 @@ const SessionCard: React.FC<SessionCardProps> = ({
   likeCount = 0
 }) => {
   const navigate = useNavigate();
+
+  // Formater l'affichage de la date
+  const getDateDisplay = () => {
+    // Vérifier AVANT de parser si c'est une session récurrente
+    const dateStr = session.date ? String(session.date) : '';
+    if (dateStr === 'RÉCURRENT' || dateStr === '2099-12-31' || isRecurring(session)) {
+      const day = getRecurrenceDay(session);
+      if (day) {
+        return `Récurrent tous les ${day}s`;
+      }
+      return 'Récurrent (hebdomadaire)';
+    }
+    // Seulement si ce n'est pas récurrent, on formate normalement
+    return parseDates(session.date).map(formatDateLabel).join(' • ');
+  };
 
   return (
     <article
@@ -74,6 +90,14 @@ const SessionCard: React.FC<SessionCardProps> = ({
           <span className="text-[10px] font-black tracking-[0.2em] sm:tracking-[0.3em] text-white uppercase">
             {session.type}
           </span>
+          {(session.date === 'RÉCURRENT' || session.date === '2099-12-31' || isRecurring(session)) && (
+            <>
+              <div className="h-[1px] w-6 sm:w-8 bg-white/10 shrink-0"></div>
+              <span className="text-[9px] font-black tracking-[0.3em] px-3 py-1 bg-blue-600/20 border border-blue-500/30 text-blue-400 uppercase">
+                🔄 RÉCURRENT
+              </span>
+            </>
+          )}
           <div className="ml-auto flex items-center gap-2">
             {/* Compteur de likes */}
             {likeCount > 0 && (
@@ -106,7 +130,7 @@ const SessionCard: React.FC<SessionCardProps> = ({
         </h3>
 
         {/* Détails de la session */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+        <div className={`grid grid-cols-1 sm:grid-cols-2 ${(session.date === 'RÉCURRENT' || session.date === '2099-12-31' || isRecurring(session)) ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-4 sm:gap-6 lg:gap-8`}>
           <div className="min-w-0">
             <p className="text-[9px] font-bold text-white/20 uppercase tracking-[0.2em] mb-2">
               Ville
@@ -115,14 +139,17 @@ const SessionCard: React.FC<SessionCardProps> = ({
               {session.city}
             </p>
           </div>
-          <div className="min-w-0">
-            <p className="text-[9px] font-bold text-white/20 uppercase tracking-[0.2em] mb-2">
-              Date
-            </p>
-            <p className="text-xs font-bold text-white uppercase break-words overflow-hidden">
-              {parseDates(session.date).map(formatDateLabel).join(' • ')}
-            </p>
-          </div>
+          {/* Ne pas afficher la date pour les sessions récurrentes */}
+          {!(session.date === 'RÉCURRENT' || session.date === '2099-12-31' || isRecurring(session)) && (
+            <div className="min-w-0">
+              <p className="text-[9px] font-bold text-white/20 uppercase tracking-[0.2em] mb-2">
+                Date
+              </p>
+              <p className="text-xs font-bold uppercase break-words overflow-hidden text-white">
+                {getDateDisplay()}
+              </p>
+            </div>
+          )}
           <div className="min-w-0">
             <p className="text-[9px] font-bold text-white/20 uppercase tracking-[0.2em] mb-2">
               Horaire

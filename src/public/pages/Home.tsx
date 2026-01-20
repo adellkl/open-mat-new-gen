@@ -212,6 +212,11 @@ const Home: React.FC = () => {
     { label: 'Utilisateurs', val: '9.2k', type: 'number' }
   ]);
 
+  // Auto-scroll en haut au chargement de la page
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   useEffect(() => {
     const loadStats = async () => {
       try {

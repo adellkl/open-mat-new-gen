@@ -8,6 +8,7 @@ import Footer from './shared/components/Footer';
 import ErrorBoundary from './shared/components/ErrorBoundary';
 import LoadingSpinner from './shared/components/LoadingSpinner';
 import SkipLink from './shared/components/SkipLink';
+import Chatbot from './shared/components/Chatbot';
 
 // Public Pages - Chargement avec code splitting
 import Home from './public/pages/Home';
@@ -109,6 +110,7 @@ const LayoutWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         {children}
       </main>
       {!isDashboard && !isAdminLogin && <Footer />}
+      {!isAdminPage && <Chatbot />}
     </div>
   );
 };

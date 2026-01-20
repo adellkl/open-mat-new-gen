@@ -166,7 +166,8 @@ const AddOpenMat: React.FC = () => {
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [formData, setFormData] = useState({
     title: '', club: '', city: '', address: '', dates: [''],
-    timeStart: '', timeEnd: '', type: 'JJB', price: '', description: ''
+    timeStart: '', timeEnd: '', type: 'JJB', price: '', description: '', instagram: '',
+    isRecurring: false, recurringDay: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -181,6 +182,11 @@ const AddOpenMat: React.FC = () => {
   const [showClubSuggestions, setShowClubSuggestions] = useState(false);
   const [selectedClub, setSelectedClub] = useState<Club | null>(null);
   const clubInputRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll en haut au chargement de la page
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
 
   // Fonction pour rechercher les villes via l'API
   const fetchCities = async (query: string) => {
@@ -290,10 +296,18 @@ const AddOpenMat: React.FC = () => {
       title: 'LOGISTIQUE',
       fields: ['city', 'dates', 'timeStart', 'timeEnd', 'type'],
       validate: () => {
-        // Vérifier que tous les champs sont remplis
-        const hasEmptyDate = formData.dates.some((date) => !date);
-        if (!formData.city.trim() || hasEmptyDate || !formData.timeStart || !formData.timeEnd) {
-          return false;
+        // Validation différente selon si c'est récurrent ou non
+        if (formData.isRecurring) {
+          // Si récurrent, vérifier le jour de la semaine au lieu des dates
+          if (!formData.city.trim() || !formData.recurringDay || !formData.timeStart || !formData.timeEnd) {
+            return false;
+          }
+        } else {
+          // Si non récurrent, vérifier les dates
+          const hasEmptyDate = formData.dates.some((date) => !date);
+          if (!formData.city.trim() || hasEmptyDate || !formData.timeStart || !formData.timeEnd) {
+            return false;
+          }
         }
         // Comparer les heures correctement
         const startTime = formData.timeStart.split(':').map(Number);
@@ -336,7 +350,9 @@ const AddOpenMat: React.FC = () => {
       if (currentStep === 2) {
         if (!formData.city.trim()) {
           errorMessage = "Veuillez remplir la ville.";
-        } else if (formData.dates.some((date) => !date)) {
+        } else if (formData.isRecurring && !formData.recurringDay) {
+          errorMessage = "Veuillez sélectionner un jour de la semaine pour la session récurrente.";
+        } else if (!formData.isRecurring && formData.dates.some((date) => !date)) {
           errorMessage = "Veuillez sélectionner toutes les dates.";
         } else if (!formData.timeStart) {
           errorMessage = "Veuillez sélectionner l'heure de début.";
@@ -423,7 +439,25 @@ const AddOpenMat: React.FC = () => {
       return;
     }
 
-    const normalizedDates = Array.from(new Set(formData.dates.filter(Boolean))).sort();
+    // Validation spécifique pour récurrence
+    if (formData.isRecurring && !formData.recurringDay) {
+      setError("Veuillez sélectionner un jour de la semaine pour la session récurrente.");
+      return;
+    }
+
+    // Si récurrent, utiliser "RÉCURRENT" comme marqueur, sinon normaliser les dates
+    let finalDate: string;
+    if (formData.isRecurring) {
+      // Utiliser 'RÉCURRENT' pour les sessions récurrentes
+      finalDate = 'RÉCURRENT';
+    } else {
+      const normalizedDates = Array.from(new Set(formData.dates.filter(Boolean))).sort();
+      if (normalizedDates.length === 0) {
+        setError("Veuillez ajouter au moins une date.");
+        return;
+      }
+      finalDate = normalizedDates.join(' | ');
+    }
 
     setIsSubmitting(true);
     setError(null);
@@ -440,18 +474,23 @@ const AddOpenMat: React.FC = () => {
         });
       }
 
+      // Préparer la description avec info récurrence
+      // La description reste telle quelle, le badge récurrent est affiché visuellement
+      let finalDescription = formData.description.trim();
+
       await db.addSession({
         title: formData.title.trim(),
         club: formData.club.trim(),
         city: formData.city.trim(),
         address: formData.address.trim(),
-        date: normalizedDates.join(' | '),
+        date: finalDate,
         time: `${formData.timeStart} - ${formData.timeEnd}`,
         price: formData.price.trim(),
         type: formData.type as any,
-        description: formData.description.trim(),
+        description: finalDescription,
         coordinates: { lat: 48.8566, lng: 2.3522, x: 50, y: 50 },
-        ...(photoBase64 && { photo: photoBase64 })
+        ...(photoBase64 && { photo: photoBase64 }),
+        ...(formData.instagram.trim() && { instagram: formData.instagram.trim() })
       });
       
       // Données soumises avec succès
@@ -468,7 +507,8 @@ const AddOpenMat: React.FC = () => {
       setTimeout(() => {
         setFormData({
           title: '', club: '', city: '', address: '', dates: [''],
-          timeStart: '', timeEnd: '', type: 'JJB', price: '', description: ''
+          timeStart: '', timeEnd: '', type: 'JJB', price: '', description: '', instagram: '',
+          isRecurring: false, recurringDay: ''
         });
         setPhoto(null);
         setPhotoPreview(null);
@@ -510,7 +550,8 @@ const AddOpenMat: React.FC = () => {
                 setShowFireworks(false);
                 setFormData({
                   title: '', club: '', city: '', address: '', dates: [''],
-                  timeStart: '', timeEnd: '', type: 'JJB', price: '', description: ''
+                  timeStart: '', timeEnd: '', type: 'JJB', price: '', description: '', instagram: '',
+                  isRecurring: false, recurringDay: ''
                 });
                 setPhoto(null);
                 setPhotoPreview(null);
@@ -641,7 +682,7 @@ const AddOpenMat: React.FC = () => {
                 <input
                   required
                   type="text"
-                  placeholder="EX: GRACIE BARRA PARIS"
+                  placeholder="EX: ALPHA FIGHT CLUB"
                   value={formData.club}
                   onChange={(e) => {
                     const value = e.target.value;
@@ -696,10 +737,17 @@ const AddOpenMat: React.FC = () => {
                           </div>
                         </div>
                       </button>
-                    ))}
+                    )                    )}
                   </div>
                 )}
               </div>
+              <InputField
+                label="Instagram du Club (optionnel)"
+                type="text"
+                placeholder="EX: @THOMAS_ALPHA_FIGHT_CLUB"
+                value={formData.instagram}
+                onChange={(e) => setFormData({...formData, instagram: e.target.value})}
+              />
               </div>
             </div>
           )}
@@ -754,9 +802,61 @@ const AddOpenMat: React.FC = () => {
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* Option Récurrence */}
+              <div className="border border-white/10 bg-white/[0.02] p-6 mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <label className="text-[11px] font-black text-white uppercase tracking-[0.3em]">
+                      🔄 Session Récurrente
+                    </label>
+                    <p className="text-[9px] text-white/40 mt-1 uppercase tracking-wider">
+                      Pour les sessions hebdomadaires régulières
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({...formData, isRecurring: !formData.isRecurring, dates: [''], recurringDay: ''})}
+                    className={`relative w-14 h-8 rounded-full transition-all ${
+                      formData.isRecurring ? 'bg-white' : 'bg-white/10'
+                    }`}
+                  >
+                    <span className={`absolute top-1 left-1 w-6 h-6 rounded-full transition-transform ${
+                      formData.isRecurring ? 'translate-x-6 bg-black' : 'translate-x-0 bg-white/40'
+                    }`} />
+                  </button>
+                </div>
+
+                {formData.isRecurring && (
+                  <div className="space-y-2 mt-4">
+                    <label className="text-[11px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                      Jour de la semaine *
+                    </label>
+                    <select
+                      required={formData.isRecurring}
+                      value={formData.recurringDay}
+                      onChange={(e) => setFormData({...formData, recurringDay: e.target.value})}
+                      className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all appearance-none cursor-pointer select-custom"
+                    >
+                      <option value="">SÉLECTIONNER UN JOUR</option>
+                      <option value="Lundi">LUNDI</option>
+                      <option value="Mardi">MARDI</option>
+                      <option value="Mercredi">MERCREDI</option>
+                      <option value="Jeudi">JEUDI</option>
+                      <option value="Vendredi">VENDREDI</option>
+                      <option value="Samedi">SAMEDI</option>
+                      <option value="Dimanche">DIMANCHE</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {/* Dates (seulement si non récurrent) */}
+              {!formData.isRecurring && (
                 <div className="space-y-2">
                   <label className="text-[11px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
-                    Dates de déploiement
+                    Dates de déploiement *
                   </label>
                   <div className="space-y-3">
                     {formData.dates.map((dateValue, index) => (
@@ -792,7 +892,8 @@ const AddOpenMat: React.FC = () => {
                     </button>
                   </div>
                 </div>
-              </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <InputField 
                   label="Heure de début"

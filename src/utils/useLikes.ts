@@ -31,9 +31,19 @@ export const useLikes = () => {
   // Charger les likes de l'utilisateur depuis la DB
   const loadUserLikes = async (uid: string) => {
     try {
-      setLoading(true);
+      // IMPORTANT: Charger IMMÉDIATEMENT depuis localStorage pour affichage instantané
+      const stored = localStorage.getItem('openmat_likes');
+      if (stored) {
+        setLikedSessions(JSON.parse(stored));
+        setLoading(false);
+      }
+      
+      // Puis synchroniser avec la DB en arrière-plan (sans bloquer l'UI)
       const sessions = await db.getUserLikedSessions(uid);
       setLikedSessions(sessions);
+      
+      // Mettre à jour localStorage avec les données de la DB
+      localStorage.setItem('openmat_likes', JSON.stringify(sessions));
     } catch (error) {
       console.error('Erreur lors du chargement des likes:', error);
       // Fallback vers localStorage en cas d'erreur DB

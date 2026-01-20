@@ -13,6 +13,7 @@ export interface OpenMatSession {
   status: 'pending' | 'approved';
   photo?: string; // URL ou base64 de la photo
   likes_count?: number; // Nombre total de likes
+  instagram?: string; // Instagram du club
   coordinates: {
     lat: number;
     lng: number;

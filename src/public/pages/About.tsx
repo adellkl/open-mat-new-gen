@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { HelpCircle, Info, CheckCircle2, Globe, Shield, Zap, Plus, ChevronDown } from 'lucide-react';
 
@@ -103,6 +103,11 @@ const ModusOperandiFAQ: React.FC = () => {
 };
 
 const About: React.FC = () => {
+  // Auto-scroll en haut au chargement de la page
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   return (
     <div className="bg-black min-h-screen pt-32 pb-60">
       <div className="max-w-7xl mx-auto px-6">

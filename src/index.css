@@ -89,10 +89,27 @@ body {
   animation: shimmer 2s infinite;
 }
 
-/* Améliorations d'accessibilité */
-.focus-visible:focus {
-  outline: 2px solid rgba(255, 255, 255, 0.5);
-  outline-offset: 2px;
+/* Suppression complète de tous les focus/outlines */
+*:focus,
+*:focus-visible,
+*:focus-within,
+*:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+button:focus,
+a:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Suppression du tap highlight sur mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Scroll smooth */
@@ -141,5 +158,48 @@ html {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Réduction des tailles de texte pour mobile */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+  
+  .text-9xl {
+    font-size: 4rem !important;
+  }
+  
+  .text-8xl {
+    font-size: 3.5rem !important;
+  }
+  
+  .text-7xl {
+    font-size: 3rem !important;
+  }
+  
+  .text-6xl {
+    font-size: 2.5rem !important;
+  }
+  
+  .text-5xl {
+    font-size: 2rem !important;
+  }
+  
+  .text-4xl {
+    font-size: 1.75rem !important;
+  }
+  
+  .text-3xl {
+    font-size: 1.5rem !important;
+  }
+  
+  .text-2xl {
+    font-size: 1.25rem !important;
+  }
+  
+  .text-xl {
+    font-size: 1.1rem !important;
   }
 }

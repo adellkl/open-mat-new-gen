@@ -20,14 +20,14 @@ const Footer: React.FC = () => {
             <div className="flex gap-4">
               <a
                 href="mailto:adelloukal2@gmail.com"
-                className="h-12 w-12 border border-white/10 flex items-center justify-center hover:bg-white hover:text-black transition-all focus:ring-2 focus:ring-white/50 focus:outline-none"
+                className="h-12 w-12 border border-white/10 flex items-center justify-center hover:bg-white hover:text-black transition-all"
                 aria-label="Nous contacter par email"
               >
                 <Mail className="h-4 w-4" aria-hidden="true" />
               </a>
               <a
                 href="#"
-                className="h-12 w-12 border border-white/10 flex items-center justify-center hover:bg-white hover:text-black transition-all focus:ring-2 focus:ring-white/50 focus:outline-none"
+                className="h-12 w-12 border border-white/10 flex items-center justify-center hover:bg-white hover:text-black transition-all"
                 aria-label="Localisation"
               >
                 <MapPin className="h-4 w-4" aria-hidden="true" />
@@ -50,7 +50,7 @@ const Footer: React.FC = () => {
                 <li key={idx}>
                   <Link
                     to={link.path}
-                    className="text-xs font-bold uppercase tracking-widest text-white/40 hover:text-white transition-all flex items-center justify-between group focus:text-white focus:outline-none focus:ring-2 focus:ring-white/30 px-2 py-1 -mx-2"
+                    className="text-xs font-bold uppercase tracking-widest text-white/40 hover:text-white transition-all flex items-center justify-between group px-2 py-1 -mx-2"
                   >
                     {link.label} <Plus className="h-3 w-3 opacity-0 group-hover:opacity-100" aria-hidden="true" />
                   </Link>

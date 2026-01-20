@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, MessageCircle, Send, Plus, ArrowRight, Check, Loader2, AlertCircle } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 import SEO from '../../shared/components/SEO';
@@ -32,6 +32,11 @@ const Contact: React.FC = () => {
     subject: '',
     message: ''
   });
+
+  // Auto-scroll en haut au chargement de la page
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

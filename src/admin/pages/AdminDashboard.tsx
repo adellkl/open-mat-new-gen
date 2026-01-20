@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Navigate, Link, useNavigate } from 'react-router-dom';
 import { 
   Check, Trash2, Calendar, Clock, MapPin, 
@@ -6,11 +6,16 @@ import {
   Users, Layers, Settings, LogOut, 
   AlertCircle, ShieldCheck, Filter, 
   ChevronRight, ArrowUpRight, Loader2, Plus, Activity, Terminal as TerminalIcon, Hash, Cpu,
-  Upload, X, Image as ImageIcon, Key, Download, RefreshCw, Edit, ChevronDown
+  Upload, X, Image as ImageIcon, Key, Download, RefreshCw, Edit, ChevronDown, Crop
 } from 'lucide-react';
+import Cropper from 'react-easy-crop';
+
+type Point = { x: number; y: number };
+type Area = { width: number; height: number; x: number; y: number };
 import { OpenMatSession } from '../../types';
 import { db } from '../../database/db';
 import { auth, AuthUser } from '../../database/auth';
+import { isSessionExpired } from '../../utils/sessionFilters';
 
 type ActiveSection = 'dashboard' | 'sessions' | 'moderators' | 'systems';
 
@@ -46,15 +51,33 @@ const AdminDashboard: React.FC = () => {
   const [editingSession, setEditingSession] = useState<OpenMatSession | null>(null);
   const [editFormData, setEditFormData] = useState({
     title: '', club: '', city: '', address: '', dates: [''],
-    timeStart: '', timeEnd: '', type: 'JJB', price: '', description: ''
+    timeStart: '', timeEnd: '', type: 'JJB', price: '', description: '', instagram: '',
+    isRecurring: false, recurringDay: ''
   });
   const [editPhoto, setEditPhoto] = useState<File | null>(null);
   const [editPhotoPreview, setEditPhotoPreview] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   
+  // États pour le crop d'image dans l'édition
+  const [showEditCropModal, setShowEditCropModal] = useState(false);
+  const [editCropImageSrc, setEditCropImageSrc] = useState<string | null>(null);
+  const [editCrop, setEditCrop] = useState<Point>({ x: 0, y: 0 });
+  const [editZoom, setEditZoom] = useState(1);
+  const [editCroppedAreaPixels, setEditCroppedAreaPixels] = useState<Area | null>(null);
+  
   const isAuthenticated = auth.isAuthenticated();
   const currentUser = auth.getCurrentUser();
+
+  // Auto-scroll en haut au chargement de la page
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
+  // Auto-scroll en haut lors du changement de section
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeSection]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -97,48 +120,85 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const parseDates = (value: string | any) => {
-    // Si c'est déjà un tableau, le retourner
-    if (Array.isArray(value)) {
-      const dates = value.map(v => String(v).trim()).filter(Boolean);
-      return dates.length > 0 ? dates : [''];
+  const parseDates = (value: string | any): string[] => {
+    try {
+      // Si c'est déjà un tableau, le retourner
+      if (Array.isArray(value)) {
+        const dates = value.map(v => String(v).trim()).filter(Boolean);
+        return dates.length > 0 ? dates : [''];
+      }
+      // Si c'est une chaîne de caractères
+      if (typeof value === 'string' && value) {
+        const dates = value
+          .split('|')
+          .map((date) => date.trim())
+          .filter(Boolean);
+        return dates.length > 0 ? dates : [''];
+      }
+      // Si c'est un autre type (Date, number, etc.), le convertir en chaîne
+      const dateStr = String(value).trim();
+      return dateStr ? [dateStr] : [''];
+    } catch (error) {
+      console.error('❌ Erreur dans parseDates:', error, 'valeur:', value);
+      return [''];
     }
-    // Si c'est une chaîne de caractères
-    if (typeof value === 'string') {
-      const dates = value
-        .split('|')
-        .map((date) => date.trim())
-        .filter(Boolean);
-      return dates.length > 0 ? dates : [''];
-    }
-    // Si c'est un autre type (Date, number, etc.), le convertir en chaîne
-    const dateStr = String(value).trim();
-    return dateStr ? [dateStr] : [''];
   };
 
   const handleEdit = (session: OpenMatSession) => {
-    setEditingSession(session);
-    
-    // Parser le time range
-    const [timeStart, timeEnd] = session.time.split(' - ');
-    
-    setEditFormData({
-      title: session.title,
-      club: session.club,
-      city: session.city,
-      address: session.address,
-      dates: parseDates(session.date),
-      timeStart: timeStart || '',
-      timeEnd: timeEnd || '',
-      type: session.type,
-      price: session.price || '',
-      description: session.description
-    });
-    
-    setEditPhotoPreview(session.photo || null);
-    setEditPhoto(null);
-    setEditError(null);
-    setShowEditModal(true);
+    try {
+      console.log('🔧 Ouverture modale édition pour:', session.title);
+      console.log('📅 Type de session.date:', typeof session.date, 'Valeur:', session.date);
+      setEditingSession(session);
+      
+      // Parser le time range
+      const [timeStart, timeEnd] = session.time?.split(' - ') || ['', ''];
+      
+      // Convertir session.date en string pour éviter les erreurs
+      const dateStr = session.date ? String(session.date) : '';
+      
+      // Vérifier si c'est une session récurrente
+      const isRecurringSession = dateStr === 'RÉCURRENT' || dateStr === '2099-12-31' || dateStr.includes('RÉCURRENT');
+      
+      // Extraire le jour de la semaine si récurrent (depuis la description ou vide si non défini)
+      let recurringDay = '';
+      if (isRecurringSession && session.description) {
+        // Chercher dans la description (ancien format)
+        const match = session.description.match(/tous les (Lundi|Mardi|Mercredi|Jeudi|Vendredi|Samedi|Dimanche)s/i);
+        if (match) {
+          recurringDay = match[1];
+        }
+        // Nettoyer la description pour retirer le texte récurrent s'il existe
+        if (match) {
+          session.description = session.description.replace(/🔄 Session récurrente tous les \w+s\n\n/g, '');
+        }
+      }
+      
+      setEditFormData({
+        title: session.title || '',
+        club: session.club || '',
+        city: session.city || '',
+        address: session.address || '',
+        dates: isRecurringSession ? [''] : parseDates(session.date),
+        timeStart: timeStart || '',
+        timeEnd: timeEnd || '',
+        type: session.type || 'JJB',
+        price: session.price || '',
+        description: session.description || '',
+        instagram: session.instagram || '',
+        isRecurring: isRecurringSession,
+        recurringDay: recurringDay
+      });
+      
+      setEditPhotoPreview(session.photo || null);
+      setEditPhoto(null);
+      setEditError(null);
+      
+      console.log('✅ Ouverture de la modale...');
+      setShowEditModal(true);
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'ouverture de la modale:', error);
+      alert('Erreur lors de l\'ouverture de la modale d\'édition. Vérifie la console.');
+    }
   };
 
   const handleEditPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -152,15 +212,72 @@ const AdminDashboard: React.FC = () => {
         setEditError('L\'image ne doit pas dépasser 5MB.');
         return;
       }
-      setEditPhoto(file);
       setEditError(null);
       
       const reader = new FileReader();
       reader.onloadend = () => {
-        setEditPhotoPreview(reader.result as string);
+        setEditCropImageSrc(reader.result as string);
+        setShowEditCropModal(true);
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const onEditCropComplete = useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
+    setEditCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  const createEditCroppedImage = async () => {
+    if (!editCropImageSrc || !editCroppedAreaPixels) return null;
+
+    const image = new Image();
+    image.src = editCropImageSrc;
+
+    return new Promise<string>((resolve) => {
+      image.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        if (!ctx) {
+          resolve(editCropImageSrc);
+          return;
+        }
+
+        canvas.width = editCroppedAreaPixels.width;
+        canvas.height = editCroppedAreaPixels.height;
+
+        ctx.drawImage(
+          image,
+          editCroppedAreaPixels.x,
+          editCroppedAreaPixels.y,
+          editCroppedAreaPixels.width,
+          editCroppedAreaPixels.height,
+          0,
+          0,
+          editCroppedAreaPixels.width,
+          editCroppedAreaPixels.height
+        );
+
+        resolve(canvas.toDataURL('image/jpeg', 0.95));
+      };
+    });
+  };
+
+  const handleEditCropSave = async () => {
+    const croppedImage = await createEditCroppedImage();
+    if (croppedImage) {
+      setEditPhotoPreview(croppedImage);
+      
+      // Convertir le base64 en File pour l'upload
+      const response = await fetch(croppedImage);
+      const blob = await response.blob();
+      const file = new File([blob], 'cropped-image.jpg', { type: 'image/jpeg' });
+      setEditPhoto(file);
+    }
+    setShowEditCropModal(false);
+    setEditCropImageSrc(null);
+    setEditCrop({ x: 0, y: 0 });
+    setEditZoom(1);
   };
 
   const handleRemoveEditPhoto = () => {
@@ -192,16 +309,41 @@ const AdminDashboard: React.FC = () => {
   const handleUpdateSession = async () => {
     if (!editingSession) return;
 
-    // Validation
-    const hasEmptyDate = editFormData.dates.some((date) => !date);
+    // Validation différente selon si c'est récurrent
+    if (editFormData.isRecurring && !editFormData.recurringDay) {
+      setEditError('Veuillez sélectionner un jour de la semaine pour la session récurrente');
+      return;
+    }
+
+    if (!editFormData.isRecurring) {
+      const hasEmptyDate = editFormData.dates.some((date) => !date);
+      if (hasEmptyDate) {
+        setEditError('Veuillez remplir toutes les dates');
+        return;
+      }
+    }
+
     if (!editFormData.title || !editFormData.club || !editFormData.city || 
-        !editFormData.address || hasEmptyDate || 
-        !editFormData.timeStart || !editFormData.timeEnd || !editFormData.description) {
+        !editFormData.address || !editFormData.timeStart || !editFormData.timeEnd || !editFormData.description) {
       setEditError('Tous les champs obligatoires doivent être remplis');
       return;
     }
 
-    const normalizedDates = Array.from(new Set(editFormData.dates.filter(Boolean))).sort();
+    // Préparer la date selon si c'est récurrent ou non
+    let finalDate: string;
+    if (editFormData.isRecurring) {
+      // Utiliser 'RÉCURRENT' pour les sessions récurrentes
+      finalDate = 'RÉCURRENT';
+    } else {
+      const normalizedDates = Array.from(new Set(editFormData.dates.filter(Boolean))).sort();
+      finalDate = normalizedDates.join(' | ');
+    }
+
+    // Préparer la description (nettoyer l'ancienne info récurrence si elle existe)
+    let finalDescription = editFormData.description.trim();
+    // Retirer l'ancienne info récurrence si elle existe (on utilise maintenant uniquement le badge visuel)
+    finalDescription = finalDescription.replace(/🔄 Session récurrente tous les \w+s\n\n/g, '');
+    // Note: On n'ajoute plus le texte récurrent dans la description, le badge visuel suffit
 
     setIsUpdating(true);
     setEditError(null);
@@ -225,12 +367,13 @@ const AdminDashboard: React.FC = () => {
         club: editFormData.club.trim(),
         city: editFormData.city.trim(),
         address: editFormData.address.trim(),
-        date: normalizedDates.join(' | '),
+        date: finalDate,
         time: `${editFormData.timeStart} - ${editFormData.timeEnd}`,
         price: editFormData.price.trim(),
         type: editFormData.type as any,
-        description: editFormData.description.trim(),
-        photo: photoBase64 || undefined
+        description: finalDescription,
+        photo: photoBase64 || undefined,
+        instagram: editFormData.instagram.trim() || undefined
       });
 
       // Mettre à jour l'état local
@@ -242,16 +385,20 @@ const AdminDashboard: React.FC = () => {
               club: editFormData.club.trim(),
               city: editFormData.city.trim(),
               address: editFormData.address.trim(),
-              date: normalizedDates.join(' | '),
+              date: finalDate,
               time: `${editFormData.timeStart} - ${editFormData.timeEnd}`,
               price: editFormData.price.trim(),
               type: editFormData.type as any,
-              description: editFormData.description.trim(),
-              photo: photoBase64 || s.photo
+              description: finalDescription,
+              photo: photoBase64 || s.photo,
+              instagram: editFormData.instagram.trim() || undefined
             }
           : s
       ));
 
+      // Scroll en haut
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
       // Fermer le modal
       setShowEditModal(false);
       setEditingSession(null);
@@ -840,13 +987,20 @@ const AdminDashboard: React.FC = () => {
                         </p>
                       </td>
                       <td className="px-10 py-8 text-center">
-                        <span className={`inline-block px-4 py-1.5 text-[9px] font-black uppercase tracking-widest border ${
-                          s.status === 'approved' 
-                            ? 'bg-white/[0.05] text-white border-white/10' 
-                            : 'bg-white/[0.05] text-white/60 border-white/5 animate-pulse'
-                        }`}>
-                          {s.status === 'approved' ? 'DIFFUSÉ' : 'ATTENTE'}
-                        </span>
+                        <div className="flex flex-col items-center gap-2">
+                          <span className={`inline-block px-4 py-1.5 text-[9px] font-black uppercase tracking-widest border ${
+                            s.status === 'approved' 
+                              ? 'bg-white/[0.05] text-white border-white/10' 
+                              : 'bg-white/[0.05] text-white/60 border-white/5 animate-pulse'
+                          }`}>
+                            {s.status === 'approved' ? 'DIFFUSÉ' : 'ATTENTE'}
+                          </span>
+                          {isSessionExpired(s) && (
+                            <span className="inline-block px-3 py-1 text-[8px] font-black uppercase tracking-wider bg-red-900/20 text-red-400 border border-red-900/30">
+                              ⏱️ EXPIRÉ
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-10 py-8 text-right">
                         <div className="flex justify-end gap-3">
@@ -1709,8 +1863,8 @@ const AdminDashboard: React.FC = () => {
 
       {/* Modale d'édition de session */}
       {showEditModal && editingSession && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/90 backdrop-blur-sm overflow-y-auto">
-          <div className="max-w-4xl w-full bg-black border border-white/20 p-8 md:p-12 my-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm overflow-y-auto">
+          <div className="max-w-7xl w-full bg-black border border-white/20 p-6 my-4 max-h-[95vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-black text-white uppercase tracking-tighter">
                 Modifier la Session
@@ -1736,222 +1890,276 @@ const AdminDashboard: React.FC = () => {
               </div>
             )}
 
-            <div className="space-y-6 mb-8">
-              {/* Titre et Club */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
-                    Nom de la Session *
+            <div className="space-y-4 mb-6">
+              {/* Ligne 1: Photo et Informations de base */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* Photo */}
+                <div className="border border-white/10 bg-white/[0.02] p-4">
+                  <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.4em] mb-3 block">
+                    Photo
                   </label>
-                  <input
-                    type="text"
-                    value={editFormData.title}
-                    onChange={(e) => setEditFormData({...editFormData, title: e.target.value})}
-                    className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10"
-                    placeholder="EX: OPEN MAT NO-GI PRO"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
-                    Académie Hôte *
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.club}
-                    onChange={(e) => setEditFormData({...editFormData, club: e.target.value})}
-                    className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10"
-                    placeholder="EX: GRACIE BARRA PARIS"
-                  />
-                </div>
-              </div>
-
-              {/* Ville et Date */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
-                    Localisation (Ville) *
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.city}
-                    onChange={(e) => setEditFormData({...editFormData, city: e.target.value})}
-                    className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10"
-                    placeholder="PARIS"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
-                    Dates *
-                  </label>
-                  <div className="space-y-3">
-                    {editFormData.dates.map((dateValue, index) => (
-                      <div key={`edit-date-${index}`} className="flex items-center gap-3">
-                        <input
-                          type="date"
-                          value={dateValue}
-                          onChange={(e) => handleEditDateChange(index, e.target.value)}
-                          className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveEditDate(index)}
-                          className={`h-12 w-12 border border-white/10 flex items-center justify-center transition-all ${
-                            editFormData.dates.length === 1
-                              ? 'text-white/20 cursor-not-allowed'
-                              : 'text-white/50 hover:text-white hover:border-white/40'
-                          }`}
-                          disabled={editFormData.dates.length === 1}
-                          aria-label="Supprimer cette date"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={handleAddEditDate}
-                      className="inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.3em] text-white/50 hover:text-white transition-all"
-                    >
-                      <Plus className="h-3 w-3" /> Ajouter une date
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Horaires et Type */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
-                    Heure de début *
-                  </label>
-                  <input
-                    type="time"
-                    value={editFormData.timeStart}
-                    onChange={(e) => setEditFormData({...editFormData, timeStart: e.target.value})}
-                    className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
-                    Heure de fin *
-                  </label>
-                  <input
-                    type="time"
-                    value={editFormData.timeEnd}
-                    onChange={(e) => setEditFormData({...editFormData, timeEnd: e.target.value})}
-                    className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
-                    Spécialité *
-                  </label>
-                  <div className="relative group">
-                    <select
-                      value={editFormData.type}
-                      onChange={(e) => setEditFormData({...editFormData, type: e.target.value as any})}
-                      className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 pr-12 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 hover:border-white/40 hover:bg-white/[0.1] transition-all cursor-pointer appearance-none select-custom-admin"
-                    >
-                      <option value="JJB">JJB (GI)</option>
-                      <option value="Luta Livre">LUTA LIVRE (NO-GI)</option>
-                      <option value="Mixte">MIXTE / GRAPPLING</option>
-                    </select>
-                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 group-hover:text-white/60 transition-all duration-300 pointer-events-none group-hover:translate-y-[-40%]" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Adresse et Prix */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
-                    Adresse Physique *
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.address}
-                    onChange={(e) => setEditFormData({...editFormData, address: e.target.value})}
-                    className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10"
-                    placeholder="RUE, CODE POSTAL..."
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
-                    Contribution / Tarif
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.price}
-                    onChange={(e) => setEditFormData({...editFormData, price: e.target.value})}
-                    className="w-full bg-white/[0.07] border border-white/20 h-14 px-6 text-white text-xs font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10"
-                    placeholder="EX: 10€ (Optionnel)"
-                  />
-                </div>
-              </div>
-
-              {/* Description */}
-              <div className="space-y-2">
-                <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
-                  Détails Techniques *
-                </label>
-                <textarea
-                  value={editFormData.description}
-                  onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
-                  className="w-full bg-white/[0.07] border border-white/20 p-6 min-h-[150px] text-white text-xs font-medium leading-relaxed outline-none focus:border-white/60 transition-all placeholder:text-white/10"
-                  placeholder="NIVEAU REQUIS, ÉQUIPEMENT, RÈGLES D'HYGIÈNE..."
-                />
-              </div>
-
-              {/* Photo */}
-              <div className="space-y-2">
-                <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
-                  Photo (Optionnel)
-                </label>
-                {!editPhotoPreview ? (
-                  <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-white/20 bg-white/[0.02] hover:border-white/40 transition-all cursor-pointer group">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <Upload className="h-8 w-8 text-white/40 group-hover:text-white/60 mb-3 transition-colors" />
-                      <p className="mb-2 text-[10px] font-bold text-white/50 uppercase tracking-wider">
-                        Cliquez pour télécharger
-                      </p>
-                      <p className="text-[8px] text-white/30 uppercase tracking-wider">
-                        PNG, JPG, WEBP (MAX. 5MB)
-                      </p>
-                    </div>
-                    <input 
-                      type="file" 
-                      className="hidden" 
-                      accept="image/*"
-                      onChange={handleEditPhotoChange}
-                    />
-                  </label>
-                ) : (
-                  <div className="relative w-full">
-                    <div className="relative w-full h-64 border border-white/20 bg-white/[0.02] overflow-hidden group">
+                  {editPhotoPreview ? (
+                    <div className="relative group">
                       <img 
                         src={editPhotoPreview} 
                         alt="Preview" 
-                        className="w-full h-full object-cover"
+                        className="w-full h-32 object-cover rounded-sm border border-white/10"
                       />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <label className="px-3 py-1.5 bg-white text-black text-[8px] font-black uppercase cursor-pointer hover:bg-white/90 transition-all flex items-center gap-1">
+                          <Upload className="h-3 w-3" />
+                          Changer
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleEditPhotoChange}
+                            className="hidden"
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={handleRemoveEditPhoto}
+                          className="px-3 py-1.5 border border-white/20 text-white text-[8px] font-black uppercase hover:bg-white/10 transition-all flex items-center gap-1"
+                        >
+                          <X className="h-3 w-3" />
+                          Supprimer
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className="w-full h-32 border-2 border-dashed border-white/20 flex flex-col items-center justify-center cursor-pointer hover:border-white/40 transition-all bg-white/[0.02]">
+                      <Upload className="h-6 w-6 text-white/40 mb-2" />
+                      <span className="text-[8px] font-black uppercase tracking-wider text-white/40">Ajouter</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleEditPhotoChange}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+
+                {/* Informations de base */}
+                <div className="lg:col-span-2 grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                      Nom Session *
+                    </label>
+                    <input
+                      type="text"
+                      value={editFormData.title}
+                      onChange={(e) => setEditFormData({...editFormData, title: e.target.value})}
+                      className="w-full bg-white/[0.07] border border-white/20 h-10 px-4 text-white text-[10px] font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10"
+                      placeholder="OPEN MAT NO-GI PRO"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                      Académie *
+                    </label>
+                    <input
+                      type="text"
+                      value={editFormData.club}
+                      onChange={(e) => setEditFormData({...editFormData, club: e.target.value})}
+                      className="w-full bg-white/[0.07] border border-white/20 h-10 px-4 text-white text-[10px] font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10"
+                      placeholder="GRACIE BARRA PARIS"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                      Ville *
+                    </label>
+                    <input
+                      type="text"
+                      value={editFormData.city}
+                      onChange={(e) => setEditFormData({...editFormData, city: e.target.value})}
+                      className="w-full bg-white/[0.07] border border-white/20 h-10 px-4 text-white text-[10px] font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10"
+                      placeholder="PARIS"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                      Type *
+                    </label>
+                    <select
+                      value={editFormData.type}
+                      onChange={(e) => setEditFormData({...editFormData, type: e.target.value as any})}
+                      className="w-full bg-white/[0.07] border border-white/20 h-10 px-4 text-white text-[10px] font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all appearance-none cursor-pointer select-custom-admin"
+                    >
+                      <option value="JJB">JJB (GI)</option>
+                      <option value="Luta Livre">LUTA LIVRE (NO-GI)</option>
+                      <option value="Mixte">MIXTE</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Ligne 2: Option Récurrence + Dates/Jour */}
+              <div className="border border-white/10 bg-white/[0.02] p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <label className="text-[10px] font-black text-white uppercase tracking-[0.3em]">
+                      🔄 Session Récurrente
+                    </label>
+                    <p className="text-[8px] text-white/40 mt-1 uppercase tracking-wider">
+                      Pour les sessions hebdomadaires régulières
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEditFormData({...editFormData, isRecurring: !editFormData.isRecurring, dates: [''], recurringDay: ''})}
+                    className={`relative w-12 h-6 rounded-full transition-all ${
+                      editFormData.isRecurring ? 'bg-white' : 'bg-white/10'
+                    }`}
+                  >
+                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full transition-transform ${
+                      editFormData.isRecurring ? 'translate-x-6 bg-black' : 'translate-x-0 bg-white/40'
+                    }`} />
+                  </button>
+                </div>
+
+                {editFormData.isRecurring ? (
+                  <div className="space-y-2">
+                    <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                      Jour de la semaine *
+                    </label>
+                    <select
+                      value={editFormData.recurringDay}
+                      onChange={(e) => setEditFormData({...editFormData, recurringDay: e.target.value})}
+                      className="w-full bg-white/[0.07] border border-white/20 h-10 px-4 text-white text-[10px] font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all appearance-none cursor-pointer select-custom"
+                    >
+                      <option value="">SÉLECTIONNER UN JOUR</option>
+                      <option value="Lundi">LUNDI</option>
+                      <option value="Mardi">MARDI</option>
+                      <option value="Mercredi">MERCREDI</option>
+                      <option value="Jeudi">JEUDI</option>
+                      <option value="Vendredi">VENDREDI</option>
+                      <option value="Samedi">SAMEDI</option>
+                      <option value="Dimanche">DIMANCHE</option>
+                    </select>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                      Dates *
+                    </label>
+                    <div className="space-y-2">
+                      {editFormData.dates.map((dateValue, index) => (
+                        <div key={`edit-date-${index}`} className="flex items-center gap-2">
+                          <input
+                            type="date"
+                            value={dateValue}
+                            onChange={(e) => handleEditDateChange(index, e.target.value)}
+                            className="flex-1 bg-white/[0.07] border border-white/20 h-10 px-4 text-white text-[10px] font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveEditDate(index)}
+                            className={`h-10 w-10 border border-white/10 flex items-center justify-center transition-all ${
+                              editFormData.dates.length === 1
+                                ? 'text-white/20 cursor-not-allowed'
+                                : 'text-white/50 hover:text-white hover:border-white/40'
+                            }`}
+                            disabled={editFormData.dates.length === 1}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
                       <button
                         type="button"
-                        onClick={handleRemoveEditPhoto}
-                        className="absolute top-2 right-2 p-2 bg-black/80 border border-white/20 text-white hover:bg-black transition-all opacity-0 group-hover:opacity-100"
+                        onClick={handleAddEditDate}
+                        className="inline-flex items-center gap-2 text-[8px] font-black uppercase tracking-[0.3em] text-white/50 hover:text-white transition-all"
                       >
-                        <X className="h-4 w-4" />
+                        <Plus className="h-3 w-3" /> Ajouter une date
                       </button>
                     </div>
                   </div>
                 )}
               </div>
+
+
+              {/* Ligne 3: Horaires, Prix, Instagram */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                    Heure début *
+                  </label>
+                  <input
+                    type="time"
+                    value={editFormData.timeStart}
+                    onChange={(e) => setEditFormData({...editFormData, timeStart: e.target.value})}
+                    className="w-full bg-white/[0.07] border border-white/20 h-10 px-4 text-white text-[10px] font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                    Heure fin *
+                  </label>
+                  <input
+                    type="time"
+                    value={editFormData.timeEnd}
+                    onChange={(e) => setEditFormData({...editFormData, timeEnd: e.target.value})}
+                    className="w-full bg-white/[0.07] border border-white/20 h-10 px-4 text-white text-[10px] font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                    Prix
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.price}
+                    onChange={(e) => setEditFormData({...editFormData, price: e.target.value})}
+                    className="w-full bg-white/[0.07] border border-white/20 h-10 px-4 text-white text-[10px] font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10"
+                    placeholder="10€"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                    Instagram
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.instagram}
+                    onChange={(e) => setEditFormData({...editFormData, instagram: e.target.value})}
+                    className="w-full bg-white/[0.07] border border-white/20 h-10 px-4 text-white text-[10px] font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10"
+                    placeholder="@CLUB"
+                  />
+                </div>
+              </div>
+
+              {/* Ligne 4: Adresse + Description */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                    Adresse *
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.address}
+                    onChange={(e) => setEditFormData({...editFormData, address: e.target.value})}
+                    className="w-full bg-white/[0.07] border border-white/20 h-10 px-4 text-white text-[10px] font-bold uppercase tracking-widest outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10"
+                    placeholder="RUE, CODE POSTAL..."
+                  />
+                </div>
+                <div className="lg:col-span-2 space-y-2">
+                  <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.4em] ml-1">
+                    Description *
+                  </label>
+                  <textarea
+                    value={editFormData.description}
+                    onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
+                    className="w-full bg-white/[0.07] border border-white/20 p-3 h-20 resize-none text-white text-[10px] font-medium leading-relaxed outline-none focus:border-white/60 transition-all placeholder:text-white/10"
+                    placeholder="NIVEAU, ÉQUIPEMENT, RÈGLES..."
+                  />
+                </div>
+              </div>
             </div>
 
-            <div className="flex gap-4">
+            {/* Boutons d'action */}
+            <div className="flex gap-3 pt-4 border-t border-white/10">
               <button
                 onClick={() => {
                   setShowEditModal(false);
@@ -1961,14 +2169,14 @@ const AdminDashboard: React.FC = () => {
                   setEditError(null);
                 }}
                 disabled={isUpdating}
-                className="flex-1 px-8 py-4 border border-white/20 text-white text-[10px] font-black uppercase tracking-[0.3em] hover:bg-white/5 transition-all disabled:opacity-50"
+                className="flex-1 px-6 py-3 border border-white/20 text-white text-[9px] font-black uppercase tracking-[0.3em] hover:bg-white/5 transition-all disabled:opacity-50"
               >
                 Annuler
               </button>
               <button
                 onClick={handleUpdateSession}
                 disabled={isUpdating}
-                className="flex-1 px-8 py-4 bg-white text-black text-[10px] font-black uppercase tracking-[0.3em] hover:bg-zinc-200 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+                className="flex-1 px-6 py-3 bg-white text-black text-[9px] font-black uppercase tracking-[0.3em] hover:bg-zinc-200 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isUpdating ? (
                   <>
@@ -1981,6 +2189,78 @@ const AdminDashboard: React.FC = () => {
                     Enregistrer
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modale de Crop d'image pour l'édition */}
+      {showEditCropModal && editCropImageSrc && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/95 backdrop-blur-sm">
+          <div className="max-w-3xl w-full bg-black border border-white/20 p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-black text-white uppercase tracking-tighter">
+                Recadrer l'image
+              </h3>
+              <button
+                onClick={() => {
+                  setShowEditCropModal(false);
+                  setEditCropImageSrc(null);
+                  setEditCrop({ x: 0, y: 0 });
+                  setEditZoom(1);
+                }}
+                className="p-2 hover:bg-white/5 transition-all"
+              >
+                <X className="h-5 w-5 text-white/60" />
+              </button>
+            </div>
+
+            <div className="relative w-full h-96 bg-black/50 mb-6">
+              <Cropper
+                image={editCropImageSrc}
+                crop={editCrop}
+                zoom={editZoom}
+                aspect={16 / 9}
+                onCropChange={setEditCrop}
+                onZoomChange={setEditZoom}
+                onCropComplete={onEditCropComplete}
+              />
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <label className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em]">
+                Zoom
+              </label>
+              <input
+                type="range"
+                min="1"
+                max="3"
+                step="0.1"
+                value={editZoom}
+                onChange={(e) => setEditZoom(parseFloat(e.target.value))}
+                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
+              />
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  setShowEditCropModal(false);
+                  setEditCropImageSrc(null);
+                  setEditCrop({ x: 0, y: 0 });
+                  setEditZoom(1);
+                }}
+                className="flex-1 px-8 py-4 border border-white/20 text-white text-[10px] font-black uppercase tracking-[0.3em] hover:bg-white/5 transition-all"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleEditCropSave}
+                className="flex-1 px-8 py-4 bg-white text-black text-[10px] font-black uppercase tracking-[0.3em] hover:bg-zinc-200 transition-all flex items-center justify-center gap-3"
+              >
+                <Crop className="h-4 w-4" />
+                Valider le recadrage
               </button>
             </div>
           </div>

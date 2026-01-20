@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, MapPin, Calendar, Clock, Tag, User, 
-  DollarSign, Info, Loader2, Navigation, Share2 
+  DollarSign, Info, Loader2, Navigation, Share2, Heart 
 } from 'lucide-react';
 import { OpenMatSession } from '../../types';
 import { db } from '../../database/db';
+import { useLikes } from '../../utils/useLikes';
+import { isSessionExpired, isRecurring, getRecurrenceDay } from '../../utils/sessionFilters';
 
 const OpenMatDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -13,6 +15,19 @@ const OpenMatDetails: React.FC = () => {
   const [session, setSession] = useState<OpenMatSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [isExpired, setIsExpired] = useState(false);
+
+  // Auto-scroll en haut au chargement de la page
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+  
+  const { 
+    toggleLike, 
+    isLiked, 
+    getLikeCount, 
+    loadLikeCount 
+  } = useLikes();
 
   const parseDates = (value?: string | null | any) => {
     if (!value) {
@@ -45,6 +60,17 @@ const OpenMatDetails: React.FC = () => {
         });
   };
 
+  const getDateDisplay = (session: OpenMatSession) => {
+    if (session.date === 'RÉCURRENT' || session.date === '2099-12-31' || isRecurring(session)) {
+      const day = getRecurrenceDay(session);
+      if (day) {
+        return `Récurrent tous les ${day}s`;
+      }
+      return 'Récurrent (hebdomadaire)';
+    }
+    return parseDates(session.date).map(formatLongDate);
+  };
+
   useEffect(() => {
     const loadSession = async () => {
       if (!id) {
@@ -59,6 +85,11 @@ const OpenMatDetails: React.FC = () => {
         
         if (foundSession) {
           setSession(foundSession);
+          setIsExpired(isSessionExpired(foundSession));
+          // Charger le compteur de likes
+          if (id) {
+            await loadLikeCount(id);
+          }
         } else {
           setError(true);
         }
@@ -71,7 +102,7 @@ const OpenMatDetails: React.FC = () => {
     };
 
     loadSession();
-  }, [id]);
+  }, [id, loadLikeCount]);
 
   if (loading) {
     return (
@@ -157,11 +188,21 @@ const OpenMatDetails: React.FC = () => {
           <ArrowLeft className="h-4 w-4" /> Retour
         </Link>
 
-        {/* Badge Discipline */}
-        <div className="absolute top-24 sm:top-32 lg:top-40 right-4 sm:right-8 z-[50]">
+        {/* Badge Discipline et Statut */}
+        <div className="absolute top-24 sm:top-32 lg:top-40 right-4 sm:right-8 z-[50] flex flex-col gap-2 items-end">
           <span className="inline-block px-4 sm:px-6 py-2 sm:py-3 bg-black/80 border border-white/20 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-[0.3em]">
             {session.type}
           </span>
+          {(session.date === 'RÉCURRENT' || session.date === '2099-12-31' || isRecurring(session)) && (
+            <span className="inline-block px-4 sm:px-6 py-2 sm:py-3 bg-blue-600/20 border border-blue-500/30 backdrop-blur-sm text-blue-400 text-[9px] font-black uppercase tracking-[0.3em]">
+              🔄 RÉCURRENT
+            </span>
+          )}
+          {isExpired && (
+            <span className="inline-block px-4 sm:px-6 py-2 sm:py-3 bg-red-950/80 border border-red-500/30 backdrop-blur-sm text-red-400 text-[9px] font-black uppercase tracking-[0.3em]">
+              Session Expirée
+            </span>
+          )}
         </div>
 
         {/* Titre et Info basiques */}
@@ -180,10 +221,11 @@ const OpenMatDetails: React.FC = () => {
               {session.title}
             </h1>
             <div className="flex flex-wrap gap-4 sm:gap-6">
-              <div className="flex items-center gap-2 text-white/80">
+              <div className={`flex items-center gap-2 ${(session.date === 'RÉCURRENT' || session.date === '2099-12-31' || isRecurring(session)) ? 'text-blue-400' : 'text-white/80'}`}>
                 <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="text-xs sm:text-sm font-bold uppercase">
-                  {parseDates(session.date).map(formatLongDate).join(' • ')}
+                  {(session.date === 'RÉCURRENT' || session.date === '2099-12-31' || isRecurring(session)) && '🔄 '}
+                  {Array.isArray(getDateDisplay(session)) ? getDateDisplay(session).join(' • ') : getDateDisplay(session)}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-white/80">
@@ -252,14 +294,25 @@ const OpenMatDetails: React.FC = () => {
                 <div>
                   <div className="flex items-center gap-3 mb-2">
                     <Calendar className="h-4 w-4 text-white/40" />
-                    <p className="text-[9px] font-bold text-white/40 uppercase tracking-[0.2em]">Date</p>
+                    <p className="text-[9px] font-bold text-white/40 uppercase tracking-[0.2em]">
+                      Date {(session.date === 'RÉCURRENT' || session.date === '2099-12-31' || isRecurring(session)) && '(Récurrence)'}
+                    </p>
                   </div>
                   <div className="pl-7 space-y-2">
-                    {parseDates(session.date).map((dateLabel, index) => (
-                      <p key={`session-date-${index}`} className="text-sm font-black text-white">
-                        {formatLongDate(dateLabel)}
-                      </p>
-                    ))}
+                    {Array.isArray(getDateDisplay(session)) ? (
+                      getDateDisplay(session).map((dateLabel: string, index: number) => (
+                        <p key={`session-date-${index}`} className="text-sm font-black text-white">
+                          {dateLabel}
+                        </p>
+                      ))
+                    ) : (
+                      <div className={`inline-flex items-center gap-2 px-4 py-2 ${(session.date === 'RÉCURRENT' || session.date === '2099-12-31' || isRecurring(session)) ? 'bg-blue-600/10 border border-blue-500/20' : ''}`}>
+                        {(session.date === 'RÉCURRENT' || session.date === '2099-12-31' || isRecurring(session)) && <span>🔄</span>}
+                        <p className={`text-sm font-black ${(session.date === 'RÉCURRENT' || session.date === '2099-12-31' || isRecurring(session)) ? 'text-blue-400' : 'text-white'}`}>
+                          {getDateDisplay(session)}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -296,17 +349,58 @@ const OpenMatDetails: React.FC = () => {
                     {session.price || 'Gratuit'}
                   </p>
                 </div>
+
+                {session.instagram && (
+                  <div className="border-t border-white/5 pt-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <svg className="h-4 w-4 text-white/40" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                      </svg>
+                      <p className="text-[9px] font-bold text-white/40 uppercase tracking-[0.2em]">Instagram</p>
+                    </div>
+                    <a 
+                      href={session.instagram.startsWith('http') ? session.instagram : `https://instagram.com/${session.instagram.replace('@', '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-black text-white pl-7 hover:text-white/70 transition-colors"
+                    >
+                      {(() => {
+                        if (session.instagram.includes('instagram.com/')) {
+                          const username = session.instagram.split('instagram.com/')[1].replace(/\/$/, '');
+                          return `@${username}`;
+                        }
+                        return session.instagram.startsWith('@') ? session.instagram : `@${session.instagram}`;
+                      })()}
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Bouton Partager */}
-            <button
-              onClick={handleShare}
-              className="w-full flex items-center justify-center gap-3 px-6 sm:px-8 py-5 bg-white text-black text-[10px] font-black uppercase tracking-[0.3em] hover:bg-zinc-200 transition-all"
-            >
-              <Share2 className="h-4 w-4" />
-              Partager
-            </button>
+            {/* Boutons Actions */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => id && toggleLike(id)}
+                className={`flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-5 border-2 text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] transition-all ${
+                  id && isLiked(id)
+                    ? 'bg-red-500 border-red-500 text-white hover:bg-red-600'
+                    : 'bg-transparent border-white/20 text-white hover:bg-white/5'
+                }`}
+              >
+                <Heart className={`h-4 w-4 ${id && isLiked(id) ? 'fill-current' : ''}`} />
+                <span className="hidden sm:inline">{id && isLiked(id) ? 'Liké' : 'Liker'}</span>
+                {id && getLikeCount(id) > 0 && (
+                  <span className="text-[9px]">({getLikeCount(id)})</span>
+                )}
+              </button>
+              <button
+                onClick={handleShare}
+                className="flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-5 bg-white text-black text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] hover:bg-zinc-200 transition-all"
+              >
+                <Share2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Partager</span>
+              </button>
+            </div>
 
             {/* Message Important */}
             <div className="border border-white/10 bg-white/[0.02] p-6">
