@@ -455,61 +455,6 @@ const Home: React.FC = () => {
         <FillingLine className="opacity-40" />
       </div>
 
-      {/* Open Mat Gallery */}
-      <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20 md:py-28">
-        <div className="mb-12 sm:mb-16 text-center">
-          <p className="text-[9px] font-black tracking-[0.4em] text-white/30 uppercase mb-4">Open Mat</p>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tight">
-            Grappling, Luta Livre & JJB en action
-          </h2>
-          <p className="text-white/40 text-sm sm:text-base max-w-2xl mx-auto mt-4">
-            Des sessions ouvertes, des échanges techniques et l&apos;énergie brute du tatami partout en France.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 sm:gap-6">
-          <div className="md:col-span-4 h-72 sm:h-80 md:h-96 border border-white/10">
-            <LazyImage
-              src="/img-jjb/open-mat-rolls-1024x683.jpg"
-              alt="Open mat grappling - Session d'entraînement de Jiu-Jitsu Brésilien"
-              className="h-full w-full object-cover"
-              placeholderClassName="h-full w-full"
-            />
-          </div>
-          <div className="md:col-span-2 h-72 sm:h-80 md:h-96 border border-white/10">
-            <LazyImage
-              src="/img-jjb/open-mat-1.png"
-              alt="Session JJB - Entraînement de grappling en gi"
-              className="h-full w-full object-cover"
-              placeholderClassName="h-full w-full"
-            />
-          </div>
-          <div className="md:col-span-2 h-56 sm:h-64 md:h-72 border border-white/10">
-            <LazyImage
-              src="/img-jjb/history-of-ibjjf.jpg"
-              alt="Combat au sol - Histoire du grappling brésilien"
-              className="h-full w-full object-cover"
-              placeholderClassName="h-full w-full"
-            />
-          </div>
-          <div className="md:col-span-2 h-56 sm:h-64 md:h-72 border border-white/10">
-            <LazyImage
-              src="/img-jjb/open-mat-rolls-1024x683.jpg"
-              alt="Grappling training - Entraînement de Jiu-Jitsu en France"
-              className="h-full w-full object-cover"
-              placeholderClassName="h-full w-full"
-            />
-          </div>
-          <div className="md:col-span-2 h-56 sm:h-64 md:h-72 border border-white/10">
-            <LazyImage
-              src="/img-jjb/open-mat-1.png"
-              alt="Open mat france - Communauté JJB française"
-              className="h-full w-full object-cover"
-              placeholderClassName="h-full w-full"
-            />
-          </div>
-        </div>
-      </section>
 
       {/* Performance Stats */}
       <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20 md:py-28 lg:py-40">
