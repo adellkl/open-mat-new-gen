@@ -798,11 +798,11 @@ const Chatbot: React.FC = () => {
       {isOpen && (
         <>
           {/* Overlay pour mobile */}
-          <div 
+          <div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99]"
             onClick={() => setIsOpen(false)}
           />
-          
+
           {/* Fenêtre chatbot */}
           <div className="fixed bottom-4 left-4 right-4 md:bottom-6 md:right-6 md:left-auto z-[100] w-auto md:w-[420px] lg:w-[440px] h-[75vh] max-h-[600px] md:h-[650px] lg:h-[700px] bg-black border border-white/20 shadow-2xl flex flex-col rounded-2xl overflow-hidden">
             {/* Header */}

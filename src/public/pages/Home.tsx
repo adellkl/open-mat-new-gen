@@ -476,23 +476,13 @@ const Home: React.FC = () => {
               placeholderClassName="h-full w-full"
             />
           </div>
-          <div className="md:col-span-2 grid grid-cols-1 gap-4 sm:gap-6">
-            <div className="h-40 sm:h-44 md:h-48 border border-white/10">
-              <LazyImage
-                src="/img-jjb/open-mat-1.png"
-                alt="Session JJB - Entraînement de grappling en gi"
-                className="h-full w-full object-cover"
-                placeholderClassName="h-full w-full"
-              />
-            </div>
-            <div className="h-40 sm:h-44 md:h-48 border border-white/10">
-              <LazyImage
-                src="/img-jjb/image.jpg"
-                alt="Luta livre open mat - Combat au sol no-gi"
-                className="h-full w-full object-cover"
-                placeholderClassName="h-full w-full"
-              />
-            </div>
+          <div className="md:col-span-2 h-72 sm:h-80 md:h-96 border border-white/10">
+            <LazyImage
+              src="/img-jjb/open-mat-1.png"
+              alt="Session JJB - Entraînement de grappling en gi"
+              className="h-full w-full object-cover"
+              placeholderClassName="h-full w-full"
+            />
           </div>
           <div className="md:col-span-2 h-56 sm:h-64 md:h-72 border border-white/10">
             <LazyImage

@@ -6,7 +6,7 @@ import {
   Users, Layers, Settings, LogOut, 
   AlertCircle, ShieldCheck, Filter, 
   ChevronRight, ArrowUpRight, Loader2, Plus, Activity, Terminal as TerminalIcon, Hash, Cpu,
-  Upload, X, Image as ImageIcon, Key, Download, RefreshCw, Edit, ChevronDown, Crop
+  Upload, X, Image as ImageIcon, Key, Download, RefreshCw, Edit, ChevronDown, Crop, Menu
 } from 'lucide-react';
 import Cropper from 'react-easy-crop';
 
@@ -26,6 +26,7 @@ const AdminDashboard: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [selectedSession, setSelectedSession] = useState<OpenMatSession | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
@@ -708,28 +709,48 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-black flex overflow-hidden">
+      {/* Overlay mobile */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-80 bg-black/40 border-r border-white/5 flex flex-col shrink-0 backdrop-blur-sm">
-        <div className="p-10">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="h-12 w-12 border border-white/20 flex items-center justify-center">
-              <ShieldCheck className="h-6 w-6 text-white" />
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 sm:w-72 lg:w-80 bg-black/95 lg:bg-black/40 border-r border-white/5 flex flex-col shrink-0 backdrop-blur-sm transition-transform duration-300 lg:translate-x-0 ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <div className="p-6 sm:p-8 lg:p-10">
+          <div className="flex items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="h-10 w-10 sm:h-12 sm:w-12 border border-white/20 flex items-center justify-center">
+                <ShieldCheck className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+              </div>
+              <div>
+                <span className="block text-xs sm:text-sm font-black tracking-tighter uppercase leading-none text-white">OMF.ADMIN</span>
+                <span className="text-[8px] sm:text-[9px] font-bold text-white/30 uppercase tracking-widest">Neon Cloud</span>
+              </div>
             </div>
-            <div>
-              <span className="block text-sm font-black tracking-tighter uppercase leading-none text-white">OMF.ADMIN</span>
-              <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">Neon Cloud</span>
-            </div>
+            {/* Bouton fermer sur mobile */}
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden p-2 hover:bg-white/10 rounded transition-colors"
+              aria-label="Fermer le menu"
+            >
+              <X className="h-5 w-5 text-white" />
+            </button>
           </div>
           
           {/* Info utilisateur connecté */}
           {currentUser && (
-            <div className="mb-12 p-4 bg-white/[0.02] border border-white/10">
-              <div className="flex items-center gap-3 mb-2">
+            <div className="mb-8 sm:mb-12 p-3 sm:p-4 bg-white/[0.02] border border-white/10">
+              <div className="flex items-center gap-2 sm:gap-3 mb-2">
                 <div className="h-2 w-2 rounded-full bg-white/60 animate-pulse"></div>
-                <span className="text-[9px] font-black text-white/60 uppercase tracking-wider">Connecté</span>
+                <span className="text-[8px] sm:text-[9px] font-black text-white/60 uppercase tracking-wider">Connecté</span>
               </div>
-              <p className="text-[11px] font-black text-white uppercase tracking-tight mb-1">{currentUser.username}</p>
-              <p className="text-[8px] text-white/40 uppercase tracking-wider mb-2">{currentUser.email}</p>
+              <p className="text-[10px] sm:text-[11px] font-black text-white uppercase tracking-tight mb-1">{currentUser.username}</p>
+              <p className="text-[7px] sm:text-[8px] text-white/40 uppercase tracking-wider mb-2">{currentUser.email}</p>
               <span className={`inline-block px-2 py-1 text-[7px] font-black uppercase tracking-wider border ${
                 currentUser.role === 'admin'
                   ? 'bg-white/10 border-white/20 text-white'
@@ -742,53 +763,65 @@ const AdminDashboard: React.FC = () => {
           
           <nav className="space-y-2">
             <button 
-              onClick={() => setActiveSection('dashboard')}
-              className={`w-full flex items-center justify-between px-6 py-4 text-[10px] font-black uppercase tracking-widest group transition-all ${
+              onClick={() => {
+                setActiveSection('dashboard');
+                setSidebarOpen(false);
+              }}
+              className={`w-full flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 text-[9px] sm:text-[10px] font-black uppercase tracking-widest group transition-all ${
                 activeSection === 'dashboard'
                   ? 'bg-white/[0.05] border border-white/10 text-white'
                   : 'hover:bg-white/[0.02] border border-transparent hover:border-white/5 text-white/40 hover:text-white'
               }`}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <LayoutDashboard className="h-4 w-4" /> Dashboard
               </div>
               {activeSection === 'dashboard' && <div className="h-1.5 w-1.5 rounded-full bg-white"></div>}
             </button>
             <button 
-              onClick={() => setActiveSection('sessions')}
-              className={`w-full flex items-center justify-between px-6 py-4 text-[10px] font-black uppercase tracking-widest group transition-all ${
+              onClick={() => {
+                setActiveSection('sessions');
+                setSidebarOpen(false);
+              }}
+              className={`w-full flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 text-[9px] sm:text-[10px] font-black uppercase tracking-widest group transition-all ${
                 activeSection === 'sessions'
                   ? 'bg-white/[0.05] border border-white/10 text-white'
                   : 'hover:bg-white/[0.02] border border-transparent hover:border-white/5 text-white/40 hover:text-white'
               }`}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <Layers className="h-4 w-4" /> Sessions
               </div>
               {activeSection === 'sessions' && <div className="h-1.5 w-1.5 rounded-full bg-white"></div>}
             </button>
             <button 
-              onClick={() => setActiveSection('moderators')}
-              className={`w-full flex items-center justify-between px-6 py-4 text-[10px] font-black uppercase tracking-widest group transition-all ${
+              onClick={() => {
+                setActiveSection('moderators');
+                setSidebarOpen(false);
+              }}
+              className={`w-full flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 text-[9px] sm:text-[10px] font-black uppercase tracking-widest group transition-all ${
                 activeSection === 'moderators'
                   ? 'bg-white/[0.05] border border-white/10 text-white'
                   : 'hover:bg-white/[0.02] border border-transparent hover:border-white/5 text-white/40 hover:text-white'
               }`}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <Users className="h-4 w-4" /> Modérateurs
               </div>
               {activeSection === 'moderators' && <div className="h-1.5 w-1.5 rounded-full bg-white"></div>}
             </button>
             <button 
-              onClick={() => setActiveSection('systems')}
-              className={`w-full flex items-center justify-between px-6 py-4 text-[10px] font-black uppercase tracking-widest group transition-all ${
+              onClick={() => {
+                setActiveSection('systems');
+                setSidebarOpen(false);
+              }}
+              className={`w-full flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 text-[9px] sm:text-[10px] font-black uppercase tracking-widest group transition-all ${
                 activeSection === 'systems'
                   ? 'bg-white/[0.05] border border-white/10 text-white'
                   : 'hover:bg-white/[0.02] border border-transparent hover:border-white/5 text-white/40 hover:text-white'
               }`}
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
                 <Settings className="h-4 w-4" /> Systèmes
               </div>
               {activeSection === 'systems' && <div className="h-1.5 w-1.5 rounded-full bg-white"></div>}
@@ -796,17 +829,17 @@ const AdminDashboard: React.FC = () => {
           </nav>
         </div>
 
-        <div className="mt-auto p-10 border-t border-white/5">
-          <div className="p-6 bg-white/[0.02] border border-white/5 mb-8">
-            <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-3">Statut Serveur</p>
-            <div className="flex items-center gap-3">
+        <div className="mt-auto p-6 sm:p-8 lg:p-10 border-t border-white/5">
+          <div className="p-4 sm:p-6 bg-white/[0.02] border border-white/5 mb-6 sm:mb-8">
+            <p className="text-[8px] sm:text-[9px] font-bold text-white/30 uppercase tracking-widest mb-2 sm:mb-3">Statut Serveur</p>
+            <div className="flex items-center gap-2 sm:gap-3">
               <div className="h-2 w-2 rounded-full bg-white/60 animate-pulse"></div>
-              <span className="text-[10px] font-black uppercase text-white/60">En ligne</span>
+              <span className="text-[9px] sm:text-[10px] font-black uppercase text-white/60">En ligne</span>
             </div>
           </div>
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center gap-4 px-6 py-4 text-white/40 hover:text-white transition-colors text-[10px] font-black uppercase tracking-widest border border-transparent hover:border-white/5"
+            className="w-full flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 text-white/40 hover:text-white transition-colors text-[9px] sm:text-[10px] font-black uppercase tracking-widest border border-transparent hover:border-white/5"
           >
             <LogOut className="h-4 w-4" /> Déconnexion
           </button>
@@ -814,20 +847,29 @@ const AdminDashboard: React.FC = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-grow overflow-y-auto h-screen p-10 lg:p-16">
-        <header className="mb-16 flex flex-col md:flex-row md:items-center justify-between gap-8">
+      <main className="flex-grow overflow-y-auto h-screen p-4 sm:p-6 lg:p-10 xl:p-16">
+        {/* Bouton hamburger mobile */}
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="lg:hidden fixed top-4 left-4 z-30 p-3 bg-black/90 border border-white/20 rounded-lg hover:bg-white/10 transition-all"
+          aria-label="Ouvrir le menu"
+        >
+          <Menu className="h-5 w-5 text-white" />
+        </button>
+
+        <header className="mb-8 sm:mb-12 lg:mb-16 flex flex-col md:flex-row md:items-center justify-between gap-6 sm:gap-8">
           <div>
-            <div className="flex items-center gap-4 mb-4 opacity-30">
-              <div className="h-[1px] w-12 bg-white"></div>
-              <span className="text-[10px] font-bold tracking-[0.6em] uppercase">Back-Office Terminal</span>
+            <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4 opacity-30">
+              <div className="h-[1px] w-8 sm:w-12 bg-white"></div>
+              <span className="text-[8px] sm:text-[10px] font-bold tracking-[0.4em] sm:tracking-[0.6em] uppercase">Back-Office Terminal</span>
             </div>
-            <h1 className="text-6xl md:text-8xl font-black text-white tracking-tighter uppercase italic mb-4">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black text-white tracking-tighter uppercase italic mb-3 sm:mb-4">
               {activeSection === 'dashboard' && 'BACK-OFFICE'}
               {activeSection === 'sessions' && 'SESSIONS'}
               {activeSection === 'moderators' && 'MODÉRATEURS'}
               {activeSection === 'systems' && 'SYSTÈMES'}
             </h1>
-            <p className="text-white/40 text-sm font-light tracking-wide">
+            <p className="text-white/40 text-xs sm:text-sm font-light tracking-wide">
               {activeSection === 'dashboard' && (
                 <>Base de données : <span className="text-white">Neon PostgreSQL Serverless</span></>
               )}
@@ -845,7 +887,7 @@ const AdminDashboard: React.FC = () => {
           
           <Link 
             to="/" 
-            className="border border-white/10 text-white px-8 py-4 text-[10px] font-black uppercase tracking-[0.3em] hover:bg-white/5 transition-all flex items-center gap-3"
+            className="border border-white/10 text-white px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] hover:bg-white/5 transition-all flex items-center justify-center gap-2 sm:gap-3 w-full md:w-auto"
           >
             Accès Public <ArrowUpRight className="h-4 w-4" />
           </Link>
@@ -855,34 +897,34 @@ const AdminDashboard: React.FC = () => {
         {activeSection === 'dashboard' && (
           <>
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-          <div className="border border-white/10 bg-white/[0.02] p-10 relative group hover:border-white/20 transition-all">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12 lg:mb-16">
+          <div className="border border-white/10 bg-white/[0.02] p-6 sm:p-8 lg:p-10 relative group hover:border-white/20 transition-all">
             <div className="absolute top-0 right-0 p-2 opacity-40"><Plus className="h-3 w-3 text-white" /></div>
-            <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.25em] mb-4">Total Database</p>
+            <p className="text-[9px] sm:text-[10px] font-black text-white/30 uppercase tracking-[0.2em] sm:tracking-[0.25em] mb-3 sm:mb-4">Total Database</p>
             <div className="flex items-end justify-between">
-              <p className="text-5xl font-black text-white tracking-tighter italic">{stats.total}</p>
-              <div className="h-12 w-12 border border-white/10 flex items-center justify-center">
-                <Layers className="h-6 w-6 text-white/40" />
+              <p className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tighter italic">{stats.total}</p>
+              <div className="h-10 w-10 sm:h-12 sm:w-12 border border-white/10 flex items-center justify-center">
+                <Layers className="h-5 w-5 sm:h-6 sm:w-6 text-white/40" />
               </div>
             </div>
           </div>
-          <div className="border border-white/10 bg-white/[0.02] p-10 relative group hover:border-white/20 transition-all">
+          <div className="border border-white/10 bg-white/[0.02] p-6 sm:p-8 lg:p-10 relative group hover:border-white/20 transition-all">
             <div className="absolute top-0 right-0 p-2 opacity-40"><Plus className="h-3 w-3 text-white" /></div>
-            <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.25em] mb-4">Action Requise</p>
+            <p className="text-[9px] sm:text-[10px] font-black text-white/30 uppercase tracking-[0.2em] sm:tracking-[0.25em] mb-3 sm:mb-4">Action Requise</p>
             <div className="flex items-end justify-between">
-              <p className="text-5xl font-black text-white tracking-tighter italic">{stats.pending}</p>
-              <div className="h-12 w-12 border border-white/10 flex items-center justify-center">
-                <AlertCircle className="h-6 w-6 text-white/40" />
+              <p className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tighter italic">{stats.pending}</p>
+              <div className="h-10 w-10 sm:h-12 sm:w-12 border border-white/10 flex items-center justify-center">
+                <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-white/40" />
               </div>
             </div>
           </div>
-          <div className="border border-white/10 bg-white/[0.02] p-10 relative group hover:border-white/20 transition-all">
+          <div className="border border-white/10 bg-white/[0.02] p-6 sm:p-8 lg:p-10 relative group hover:border-white/20 transition-all sm:col-span-2 lg:col-span-1">
             <div className="absolute top-0 right-0 p-2 opacity-40"><Plus className="h-3 w-3 text-white" /></div>
-            <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.25em] mb-4">En Ligne</p>
+            <p className="text-[9px] sm:text-[10px] font-black text-white/30 uppercase tracking-[0.2em] sm:tracking-[0.25em] mb-3 sm:mb-4">En Ligne</p>
             <div className="flex items-end justify-between">
-              <p className="text-5xl font-black text-white tracking-tighter italic">{stats.approved}</p>
-              <div className="h-12 w-12 border border-white/10 flex items-center justify-center">
-                <ShieldCheck className="h-6 w-6 text-white/40" />
+              <p className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tighter italic">{stats.approved}</p>
+              <div className="h-10 w-10 sm:h-12 sm:w-12 border border-white/10 flex items-center justify-center">
+                <ShieldCheck className="h-5 w-5 sm:h-6 sm:w-6 text-white/40" />
               </div>
             </div>
           </div>
@@ -890,11 +932,11 @@ const AdminDashboard: React.FC = () => {
 
         {/* Filtrage & Liste */}
         <div className="border border-white/10 bg-white/[0.02] overflow-hidden">
-          <div className="p-8 border-b border-white/5 flex flex-col xl:flex-row gap-8 justify-between items-center">
-            <div className="flex bg-white/[0.05] p-1.5 w-full xl:w-auto">
+          <div className="p-4 sm:p-6 lg:p-8 border-b border-white/5 flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8 justify-between items-stretch lg:items-center">
+            <div className="flex bg-white/[0.05] p-1 sm:p-1.5 w-full lg:w-auto">
               <button 
                 onClick={() => setFilter('all')} 
-                className={`px-8 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${
+                className={`flex-1 lg:flex-none px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${
                   filter === 'all' 
                     ? 'bg-white text-black' 
                     : 'text-white/40 hover:text-white'
@@ -904,7 +946,7 @@ const AdminDashboard: React.FC = () => {
               </button>
               <button 
                 onClick={() => setFilter('pending')} 
-                className={`px-8 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${
+                className={`flex-1 lg:flex-none px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${
                   filter === 'pending' 
                     ? 'bg-white text-black' 
                     : 'text-white/40 hover:text-white'
@@ -914,7 +956,7 @@ const AdminDashboard: React.FC = () => {
               </button>
               <button 
                 onClick={() => setFilter('approved')} 
-                className={`px-8 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${
+                className={`flex-1 lg:flex-none px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all ${
                   filter === 'approved' 
                     ? 'bg-white text-black' 
                     : 'text-white/40 hover:text-white'
@@ -924,12 +966,12 @@ const AdminDashboard: React.FC = () => {
               </button>
             </div>
 
-            <div className="relative w-full xl:w-96">
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
+            <div className="relative w-full lg:w-96">
+              <Search className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
               <input 
                 type="text" 
-                placeholder="RECHERCHER UN CLUB OU ÉVÉNEMENT..." 
-                className="w-full h-16 pl-14 pr-8 bg-white/[0.07] border border-white/20 text-white text-xs font-bold uppercase tracking-wider outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10" 
+                placeholder="RECHERCHER..." 
+                className="w-full h-12 sm:h-14 lg:h-16 pl-10 sm:pl-14 pr-4 sm:pr-8 bg-white/[0.07] border border-white/20 text-white text-[10px] sm:text-xs font-bold uppercase tracking-wider outline-none focus:border-white/60 focus:bg-white/[0.1] transition-all placeholder:text-white/10" 
                 value={searchTerm} 
                 onChange={(e) => setSearchTerm(e.target.value)} 
               />
@@ -937,23 +979,23 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
                 <tr className="bg-white/[0.01] border-b border-white/5">
-                  <th className="px-10 py-6 text-[10px] font-black text-white/30 uppercase tracking-widest">Événement & Club</th>
-                  <th className="px-10 py-6 text-[10px] font-black text-white/30 uppercase tracking-widest">Localisation</th>
-                  <th className="px-10 py-6 text-[10px] font-black text-white/30 uppercase tracking-widest">Date & Heure</th>
-                  <th className="px-10 py-6 text-[10px] font-black text-white/30 uppercase tracking-widest text-center">Statut</th>
-                  <th className="px-10 py-6 text-[10px] font-black text-white/30 uppercase tracking-widest text-right">Actions</th>
+                  <th className="px-4 sm:px-6 lg:px-10 py-4 sm:py-5 lg:py-6 text-[9px] sm:text-[10px] font-black text-white/30 uppercase tracking-widest">Événement & Club</th>
+                  <th className="px-4 sm:px-6 lg:px-10 py-4 sm:py-5 lg:py-6 text-[9px] sm:text-[10px] font-black text-white/30 uppercase tracking-widest">Localisation</th>
+                  <th className="px-4 sm:px-6 lg:px-10 py-4 sm:py-5 lg:py-6 text-[9px] sm:text-[10px] font-black text-white/30 uppercase tracking-widest">Date & Heure</th>
+                  <th className="px-4 sm:px-6 lg:px-10 py-4 sm:py-5 lg:py-6 text-[9px] sm:text-[10px] font-black text-white/30 uppercase tracking-widest text-center">Statut</th>
+                  <th className="px-4 sm:px-6 lg:px-10 py-4 sm:py-5 lg:py-6 text-[9px] sm:text-[10px] font-black text-white/30 uppercase tracking-widest text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {filtered.length > 0 ? (
                   filtered.map((s) => (
                     <tr key={s.id} className="hover:bg-white/[0.02] transition-colors group border-b border-white/5">
-                      <td className="px-10 py-8">
-                        <div className="flex items-center gap-5">
-                          <div className="h-16 w-16 border border-white/10 bg-white/[0.02] overflow-hidden shrink-0 relative group-hover:border-white/20 transition-all">
+                      <td className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
+                        <div className="flex items-center gap-3 sm:gap-4 lg:gap-5">
+                          <div className="h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16 border border-white/10 bg-white/[0.02] overflow-hidden shrink-0 relative group-hover:border-white/20 transition-all">
                             {s.photo ? (
                               <img 
                                 src={s.photo} 
@@ -962,33 +1004,33 @@ const AdminDashboard: React.FC = () => {
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
-                                <ImageIcon className="h-6 w-6 text-white/20" />
+                                <ImageIcon className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white/20" />
                               </div>
                             )}
                           </div>
                           <div>
-                            <p className="text-[13px] font-black text-white uppercase tracking-tight leading-none mb-1.5">{s.title}</p>
-                            <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.15em]">{s.club}</p>
+                            <p className="text-[11px] sm:text-[12px] lg:text-[13px] font-black text-white uppercase tracking-tight leading-none mb-1 sm:mb-1.5">{s.title}</p>
+                            <p className="text-[9px] sm:text-[10px] font-bold text-white/40 uppercase tracking-[0.15em]">{s.club}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-10 py-8">
-                        <p className="text-[11px] font-black text-white flex items-center gap-2 uppercase tracking-wide">
-                          <MapPin className="h-3.5 w-3.5 text-white/40" /> {s.city}
+                      <td className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
+                        <p className="text-[10px] sm:text-[11px] font-black text-white flex items-center gap-2 uppercase tracking-wide">
+                          <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white/40" /> {s.city}
                         </p>
-                        <p className="text-[10px] font-bold text-white/30 truncate max-w-[180px] mt-1">{s.address}</p>
+                        <p className="text-[9px] sm:text-[10px] font-bold text-white/30 truncate max-w-[140px] sm:max-w-[180px] mt-1">{s.address}</p>
                       </td>
-                      <td className="px-10 py-8">
-                        <p className="text-[11px] font-black text-white flex items-center gap-2 uppercase tracking-wide">
-                          <Calendar className="h-3.5 w-3.5 text-white/40" /> {new Date(s.date).toLocaleDateString('fr-FR')}
+                      <td className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8">
+                        <p className="text-[10px] sm:text-[11px] font-black text-white flex items-center gap-2 uppercase tracking-wide">
+                          <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white/40" /> {new Date(s.date).toLocaleDateString('fr-FR')}
                         </p>
-                        <p className="text-[10px] font-bold text-white/30 flex items-center gap-2 mt-1 uppercase">
-                          <Clock className="h-3.5 w-3.5" /> {s.time}
+                        <p className="text-[9px] sm:text-[10px] font-bold text-white/30 flex items-center gap-2 mt-1 uppercase">
+                          <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> {s.time}
                         </p>
                       </td>
-                      <td className="px-10 py-8 text-center">
-                        <div className="flex flex-col items-center gap-2">
-                          <span className={`inline-block px-4 py-1.5 text-[9px] font-black uppercase tracking-widest border ${
+                      <td className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 text-center">
+                        <div className="flex flex-col items-center gap-1.5 sm:gap-2">
+                          <span className={`inline-block px-3 sm:px-4 py-1 sm:py-1.5 text-[8px] sm:text-[9px] font-black uppercase tracking-widest border ${
                             s.status === 'approved' 
                               ? 'bg-white/[0.05] text-white border-white/10' 
                               : 'bg-white/[0.05] text-white/60 border-white/5 animate-pulse'
@@ -996,44 +1038,44 @@ const AdminDashboard: React.FC = () => {
                             {s.status === 'approved' ? 'DIFFUSÉ' : 'ATTENTE'}
                           </span>
                           {isSessionExpired(s) && (
-                            <span className="inline-block px-3 py-1 text-[8px] font-black uppercase tracking-wider bg-red-900/20 text-red-400 border border-red-900/30">
+                            <span className="inline-block px-2 sm:px-3 py-1 text-[7px] sm:text-[8px] font-black uppercase tracking-wider bg-red-900/20 text-red-400 border border-red-900/30">
                               ⏱️ EXPIRÉ
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="px-10 py-8 text-right">
-                        <div className="flex justify-end gap-3">
+                      <td className="px-4 sm:px-6 lg:px-10 py-4 sm:py-6 lg:py-8 text-right">
+                        <div className="flex justify-end gap-2 sm:gap-3">
                           {s.status === 'pending' ? (
                             <button 
                               onClick={() => handleApprove(s.id)}
-                              className="h-10 w-10 bg-white text-black border border-white/20 flex items-center justify-center hover:bg-zinc-200 transition-all"
+                              className="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 bg-white text-black border border-white/20 flex items-center justify-center hover:bg-zinc-200 transition-all"
                               title="Valider et diffuser"
                             >
-                              <Check className="h-4 w-4" />
+                              <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </button>
                           ) : (
                             <button 
                               onClick={() => handleUnapprove(s.id)}
-                              className="h-10 w-10 border border-white/20 text-white/60 flex items-center justify-center hover:bg-white/5 hover:text-white transition-all"
+                              className="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 border border-white/20 text-white/60 flex items-center justify-center hover:bg-white/5 hover:text-white transition-all"
                               title="Retirer la diffusion"
                             >
-                              <X className="h-4 w-4" />
+                              <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </button>
                           )}
                           <button 
                             onClick={() => handleEdit(s)}
-                            className="h-10 w-10 border border-white/10 text-white/40 flex items-center justify-center hover:bg-white/5 hover:text-white transition-all"
+                            className="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 border border-white/10 text-white/40 flex items-center justify-center hover:bg-white/5 hover:text-white transition-all"
                             title="Modifier les informations"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           </button>
                           <button 
                             onClick={() => handleReject(s.id)}
-                            className="h-10 w-10 border border-white/10 text-white/40 flex items-center justify-center hover:bg-white/5 hover:text-white transition-all"
+                            className="h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 border border-white/10 text-white/40 flex items-center justify-center hover:bg-white/5 hover:text-white transition-all"
                             title="Supprimer définitivement"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           </button>
                         </div>
                       </td>
