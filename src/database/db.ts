@@ -6,7 +6,10 @@ import { OpenMatSession } from '../types/index';
 const connectionString = import.meta.env.VITE_DATABASE_URL;
 
 if (!connectionString) {
-  throw new Error('VITE_DATABASE_URL environment variable is not set');
+  console.error('❌ VITE_DATABASE_URL is not set!');
+  console.error('📝 Add environment variables in Vercel:');
+  console.error('   Settings → Environment Variables');
+  throw new Error('VITE_DATABASE_URL environment variable is not set. Check Vercel configuration.');
 }
 
 // Initialisation de Neon
