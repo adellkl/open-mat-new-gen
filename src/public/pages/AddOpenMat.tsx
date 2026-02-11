@@ -6,6 +6,7 @@ import {
   Activity, Hash, Cpu, Terminal as TerminalIcon, Circle, Upload, X, Image as ImageIcon, ChevronDown
 } from 'lucide-react';
 import { db } from '../../database/db';
+import { sendNewOpenMatNotification } from '../../utils/emailNotification';
 import SEO from '../../shared/components/SEO';
 import { searchClubs, Club, DEFAULT_CLUB_LOGO } from '../../data/clubs';
 
@@ -492,6 +493,20 @@ const AddOpenMat: React.FC = () => {
         ...(photoBase64 && { photo: photoBase64 }),
         ...(formData.instagram.trim() && { instagram: formData.instagram.trim() })
       });
+
+      // Envoyer la notification email (silencieux en cas d'échec)
+      sendNewOpenMatNotification({
+        title: formData.title.trim(),
+        club: formData.club.trim(),
+        city: formData.city.trim(),
+        address: formData.address.trim(),
+        date: finalDate,
+        time: `${formData.timeStart} - ${formData.timeEnd}`,
+        type: formData.type,
+        price: formData.price.trim(),
+        description: finalDescription,
+        ...(formData.instagram.trim() && { instagram: formData.instagram.trim() })
+      });
       
       // Données soumises avec succès
       setIsSubmitting(false);
@@ -529,7 +544,7 @@ const AddOpenMat: React.FC = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center px-4 sm:px-6 relative">
+      <div className="h-screen bg-black flex items-center justify-center px-4 sm:px-6 relative overflow-hidden">
         {showFireworks && <Fireworks />}
         <div className="max-w-2xl w-full border border-white/10 p-8 sm:p-12 md:p-24 text-center reveal active relative z-50" data-always-active="true">
           <div className="inline-flex items-center justify-center h-20 w-20 border border-white/20 rounded-full mb-12 animate-pulse">
